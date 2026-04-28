@@ -617,8 +617,8 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginTop: 6, marginBottom: 24,
@@ -1201,8 +1201,8 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
     return (
       <Bg t={t} padTop={56}>
         <Orbs dark={dark} />
-        <BackChip t={t} onBack={onBack} />
         <div style={{ padding: '0 20px', position: 'relative' }}>
+          <BackHeader t={t} onBack={onBack} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
             <TimerBar t={t} sec={secLeft} total={TIMER_SECONDS} />
@@ -1263,9 +1263,9 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
           <Pill t={t} tone="accent">⚡ head-to-head</Pill>
         </div>
@@ -1362,9 +1362,9 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
     return (
       <Bg t={t} padTop={56}>
         <Orbs dark={dark} />
-        <BackChip t={t} onBack={onBack} />
         <div style={{ padding: '0 20px', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
+          <BackHeader t={t} onBack={onBack} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
             <Pill t={t}>🧠 solo · no timer</Pill>
           </div>
@@ -1428,9 +1428,9 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
           <Pill t={t}>🧠 solo · no timer</Pill>
         </div>
@@ -1516,8 +1516,10 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative', textAlign: 'center' }}>
+        <div style={{ textAlign: 'left' }}>
+          <BackHeader t={t} onBack={onBack} />
+        </div>
         <div style={{
           fontFamily: MONO, fontSize: 11, color: t.textDim,
           letterSpacing: '0.15em', marginTop: 8,
@@ -1688,9 +1690,9 @@ function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Leaderboard</h1>
           <div style={{
             padding: '6px 4px', borderRadius: 100,
@@ -1736,9 +1738,9 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
-      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Profile</h1>
           <div onClick={onToggleTheme} style={{
             width: 38, height: 38, borderRadius: 100,
