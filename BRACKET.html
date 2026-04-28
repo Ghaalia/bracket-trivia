@@ -1,0 +1,2176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A1429" />
+<title>BRACKET — Trivia, but actually fun.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #050B1C; }
+  body { font-family: 'Space Grotesk', -apple-system, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  /* desktop: phone-shaped frame so the mobile-first design still looks right */
+  #root {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .phone {
+    width: 100vw;
+    min-height: 100vh;
+    max-width: 100vw;
+    overflow: hidden;
+    position: relative;
+  }
+  @media (min-width: 480px) {
+    body { padding: 24px 0; }
+    #root { padding: 24px; }
+    .phone {
+      width: 402px;
+      height: 874px;
+      min-height: 874px;
+      max-width: 402px;
+      border-radius: 48px;
+      box-shadow:
+        0 50px 120px rgba(0,0,0,0.55),
+        0 0 0 8px #0a0f1f,
+        0 0 0 9px rgba(255,255,255,0.06);
+    }
+  }
+  /* hide scrollbars inside the app */
+  .phone *::-webkit-scrollbar { display: none; }
+  .phone * { scrollbar-width: none; }
+  /* fade-in for screen transitions */
+  @keyframes screenIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .screen { animation: screenIn 220ms ease-out; }
+  @keyframes pulseRing {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50%     { transform: scale(1.03); opacity: 0.85; }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .shake { animation: shake 220ms ease-in-out; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback, Fragment } = React;
+
+// ───────────────────────── Design tokens (from screens.jsx) ─────────────────────────
+const TOKENS = {
+  dark: {
+    bg: '#0A1429',
+    bgGrad: 'radial-gradient(120% 80% at 50% 0%, #1B3470 0%, #0A1429 55%, #050B1C 100%)',
+    surface: 'rgba(255,255,255,0.06)',
+    surfaceStrong: 'rgba(255,255,255,0.10)',
+    border: 'rgba(255,255,255,0.12)',
+    text: '#F4F7FF',
+    textDim: 'rgba(244,247,255,0.62)',
+    textMute: 'rgba(244,247,255,0.42)',
+    accent: '#4D7BFF',
+    accentSoft: 'rgba(77,123,255,0.18)',
+    accentGlow: '0 0 40px rgba(77,123,255,0.55), inset 0 1px 0 rgba(255,255,255,0.18)',
+    success: '#4ADE80',
+    danger: '#FF6B6B',
+    warn: '#FFB454',
+  },
+  light: {
+    bg: '#F2F4FA',
+    bgGrad: 'radial-gradient(120% 80% at 50% 0%, #DDE6FF 0%, #EEF1FA 55%, #E8ECF7 100%)',
+    surface: '#FFFFFF',
+    surfaceStrong: '#FFFFFF',
+    border: 'rgba(10,20,41,0.08)',
+    text: '#0A1429',
+    textDim: 'rgba(10,20,41,0.62)',
+    textMute: 'rgba(10,20,41,0.42)',
+    accent: '#2E54E0',
+    accentSoft: 'rgba(46,84,224,0.10)',
+    accentGlow: '0 12px 30px rgba(46,84,224,0.30), inset 0 1px 0 rgba(255,255,255,0.6)',
+    success: '#16A34A',
+    danger: '#DC2626',
+    warn: '#D97706',
+  },
+};
+
+const MONO = '"JetBrains Mono", "SF Mono", ui-monospace, monospace';
+const SANS = '"Space Grotesk", -apple-system, system-ui, sans-serif';
+
+function shade(hex, amt) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  let r = (n >> 16) + amt;
+  let g = ((n >> 8) & 0xff) + amt;
+  let b = (n & 0xff) + amt;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+// ───────────────────────── Categories ─────────────────────────
+const CATEGORIES = [
+  { id: 'movies',    label: 'Movies',    emoji: '🎬', count: 412, hue: '#FF6B6B' },
+  { id: 'history',   label: 'History',   emoji: '🏛️', count: 308, hue: '#FFB454' },
+  { id: 'landmarks', label: 'Landmarks', emoji: '🗺️', count: 254, hue: '#4ADE80' },
+  { id: 'sports',    label: 'Sports',    emoji: '⚽', count: 199, hue: '#4D7BFF' },
+  { id: 'music',     label: 'Music',     emoji: '🎵', count: 286, hue: '#C77DFF' },
+  { id: 'science',   label: 'Science',   emoji: '🧪', count: 221, hue: '#00C2D1' },
+];
+
+// ───────────────────────── Question bank ─────────────────────────
+// type: 'mc' multiple choice | 'tf' true/false. answer = index of correct option (or 0/1 for tf where 0=true,1=false)
+const QUESTIONS = {
+  movies: {
+    easy: [
+      { type: 'mc', q: 'Which animated film features a snowman named Olaf?', opts: ['Frozen', 'Tangled', 'Moana', 'Brave'], a: 0 },
+      { type: 'tf', q: 'The Lion King (1994) was released by Disney.', a: 0 },
+      { type: 'mc', q: 'Who plays Iron Man in the Marvel films?', opts: ['Chris Evans', 'Robert Downey Jr.', 'Mark Ruffalo', 'Chris Hemsworth'], a: 1 },
+      { type: 'mc', q: 'What color is the main character in Shrek?', opts: ['Blue', 'Red', 'Green', 'Yellow'], a: 2 },
+    ],
+    mid: [
+      { type: 'mc', q: 'Who directed the 2021 sci-fi epic "Dune: Part One"?', opts: ['Christopher Nolan', 'Denis Villeneuve', 'Greta Gerwig', 'Bong Joon-ho'], a: 1 },
+      { type: 'mc', q: 'Which film won Best Picture at the 2020 Oscars?', opts: ['1917', 'Joker', 'Parasite', 'Once Upon a Time in Hollywood'], a: 2 },
+      { type: 'tf', q: 'The Godfather Part II won Best Picture.', a: 0 },
+      { type: 'mc', q: 'Who composed the soundtrack for "The Lord of the Rings"?', opts: ['Hans Zimmer', 'John Williams', 'Howard Shore', 'Danny Elfman'], a: 2 },
+    ],
+    hard: [
+      { type: 'mc', q: 'Which year was "Citizen Kane" released?', opts: ['1939', '1941', '1945', '1950'], a: 1 },
+      { type: 'mc', q: 'Who directed "In the Mood for Love" (2000)?', opts: ['Wong Kar-wai', 'Park Chan-wook', 'Ang Lee', 'Hou Hsiao-hsien'], a: 0 },
+      { type: 'tf', q: 'Stanley Kubrick directed "A Clockwork Orange" and "2001: A Space Odyssey".', a: 0 },
+      { type: 'mc', q: 'What is the highest-grossing film not in English?', opts: ['Parasite', 'The Wandering Earth II', 'Ne Zha 2', 'Hero'], a: 2 },
+    ],
+  },
+  history: {
+    easy: [
+      { type: 'mc', q: 'Who was the first President of the United States?', opts: ['Thomas Jefferson', 'John Adams', 'George Washington', 'Abraham Lincoln'], a: 2 },
+      { type: 'tf', q: 'The Berlin Wall fell in 1989.', a: 0 },
+      { type: 'mc', q: 'In which country did the ancient Olympic Games begin?', opts: ['Italy', 'Greece', 'Egypt', 'Turkey'], a: 1 },
+      { type: 'mc', q: 'Which empire built the Colosseum?', opts: ['Greek', 'Ottoman', 'Roman', 'Persian'], a: 2 },
+    ],
+    mid: [
+      { type: 'mc', q: 'In what year did World War II end?', opts: ['1942', '1944', '1945', '1947'], a: 2 },
+      { type: 'tf', q: 'The Magna Carta was signed in 1215.', a: 0 },
+      { type: 'mc', q: 'Who was the first woman to win a Nobel Prize?', opts: ['Marie Curie', 'Rosalind Franklin', 'Ada Lovelace', 'Dorothy Hodgkin'], a: 0 },
+      { type: 'mc', q: 'The French Revolution began in which year?', opts: ['1776', '1789', '1804', '1815'], a: 1 },
+    ],
+    hard: [
+      { type: 'mc', q: 'Which Roman emperor built a wall across northern Britain?', opts: ['Trajan', 'Hadrian', 'Augustus', 'Nero'], a: 1 },
+      { type: 'tf', q: 'The Treaty of Westphalia was signed in 1648.', a: 0 },
+      { type: 'mc', q: 'Who founded the Mongol Empire?', opts: ['Kublai Khan', 'Tamerlane', 'Genghis Khan', 'Ögedei Khan'], a: 2 },
+      { type: 'mc', q: 'The Battle of Hastings took place in:', opts: ['1066', '1099', '1215', '1314'], a: 0 },
+    ],
+  },
+  landmarks: {
+    easy: [
+      { type: 'mc', q: 'In which city is the Eiffel Tower?', opts: ['London', 'Rome', 'Paris', 'Madrid'], a: 2 },
+      { type: 'tf', q: 'The Statue of Liberty was a gift from France to the United States.', a: 0 },
+      { type: 'mc', q: 'This iconic 30-meter statue stands above Rio de Janeiro. What is it?', opts: ['Eiffel Tower', 'Statue of Liberty', 'Christ the Redeemer', 'Big Ben'], a: 2 },
+      { type: 'mc', q: 'Where is the Great Pyramid of Giza?', opts: ['Mexico', 'Egypt', 'Peru', 'Sudan'], a: 1 },
+    ],
+    mid: [
+      { type: 'mc', q: 'The Taj Mahal is located in which country?', opts: ['Pakistan', 'India', 'Bangladesh', 'Nepal'], a: 1 },
+      { type: 'tf', q: 'Machu Picchu is in Peru.', a: 0 },
+      { type: 'mc', q: 'Which city is home to the Burj Khalifa?', opts: ['Doha', 'Riyadh', 'Dubai', 'Abu Dhabi'], a: 2 },
+      { type: 'mc', q: 'The Acropolis stands above which city?', opts: ['Rome', 'Athens', 'Istanbul', 'Cairo'], a: 1 },
+    ],
+    hard: [
+      { type: 'mc', q: 'Petra is an archaeological city in:', opts: ['Israel', 'Jordan', 'Lebanon', 'Syria'], a: 1 },
+      { type: 'tf', q: 'The Great Wall of China is visible from space with the naked eye.', a: 1 },
+      { type: 'mc', q: 'Which landmark sits at 2,430 m above sea level in Peru?', opts: ['Cusco', 'Machu Picchu', 'Nazca', 'Sacsayhuamán'], a: 1 },
+      { type: 'mc', q: 'Angkor Wat was originally built as a:', opts: ['Buddhist temple', 'Hindu temple', 'Royal palace', 'Fortress'], a: 1 },
+    ],
+  },
+  sports: {
+    easy: [
+      { type: 'mc', q: 'How many players are on a soccer team on the field?', opts: ['9', '10', '11', '12'], a: 2 },
+      { type: 'tf', q: 'A marathon is exactly 42.195 km.', a: 0 },
+      { type: 'mc', q: 'Which sport is associated with Wimbledon?', opts: ['Cricket', 'Tennis', 'Rugby', 'Golf'], a: 1 },
+      { type: 'mc', q: 'How many points is a touchdown in American football?', opts: ['3', '6', '7', '10'], a: 1 },
+    ],
+    mid: [
+      { type: 'mc', q: 'Which country won the 2022 FIFA World Cup?', opts: ['France', 'Brazil', 'Argentina', 'Germany'], a: 2 },
+      { type: 'tf', q: 'Michael Jordan won six NBA championships with the Bulls.', a: 0 },
+      { type: 'mc', q: 'How many Grand Slam tennis tournaments are there per year?', opts: ['2', '3', '4', '5'], a: 2 },
+      { type: 'mc', q: 'Which country invented the modern Olympics?', opts: ['Greece', 'France', 'Italy', 'UK'], a: 1 },
+    ],
+    hard: [
+      { type: 'mc', q: 'Who has the most career Grand Slam singles titles in tennis?', opts: ['Roger Federer', 'Rafael Nadal', 'Novak Djokovic', 'Pete Sampras'], a: 2 },
+      { type: 'tf', q: 'Cricket\'s longest match (a "Timeless Test") lasted 9 days.', a: 0 },
+      { type: 'mc', q: 'Which country has won the most Tour de France titles?', opts: ['Belgium', 'France', 'Spain', 'USA'], a: 1 },
+      { type: 'mc', q: 'In F1, what does DRS stand for?', opts: ['Drag Reduction System', 'Drive Recovery System', 'Direct Response Steering', 'Dynamic Race Setup'], a: 0 },
+    ],
+  },
+  music: {
+    easy: [
+      { type: 'mc', q: 'Which band performed "Bohemian Rhapsody"?', opts: ['The Beatles', 'Queen', 'Pink Floyd', 'Led Zeppelin'], a: 1 },
+      { type: 'tf', q: 'Beyoncé was a member of Destiny\'s Child.', a: 0 },
+      { type: 'mc', q: 'How many strings does a standard guitar have?', opts: ['4', '5', '6', '7'], a: 2 },
+      { type: 'mc', q: 'Who is known as the "King of Pop"?', opts: ['Elvis Presley', 'Prince', 'Michael Jackson', 'Freddie Mercury'], a: 2 },
+    ],
+    mid: [
+      { type: 'mc', q: 'Which Beatles album features "Come Together"?', opts: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], a: 1 },
+      { type: 'tf', q: 'Mozart died before he turned 40.', a: 0 },
+      { type: 'mc', q: 'Who created the Broadway musical "Hamilton"?', opts: ['Stephen Sondheim', 'Lin-Manuel Miranda', 'Andrew Lloyd Webber', 'Jonathan Larson'], a: 1 },
+      { type: 'mc', q: 'What instrument did Miles Davis primarily play?', opts: ['Saxophone', 'Trumpet', 'Piano', 'Drums'], a: 1 },
+    ],
+    hard: [
+      { type: 'mc', q: 'Which composer wrote "The Four Seasons"?', opts: ['Bach', 'Vivaldi', 'Handel', 'Pachelbel'], a: 1 },
+      { type: 'tf', q: 'The album "Thriller" by Michael Jackson is the best-selling album of all time.', a: 0 },
+      { type: 'mc', q: 'In music theory, how many notes are in a chromatic scale?', opts: ['7', '8', '12', '13'], a: 2 },
+      { type: 'mc', q: 'Which producer is associated with Wu-Tang Clan?', opts: ['Dr. Dre', 'RZA', 'Pharrell', 'Timbaland'], a: 1 },
+    ],
+  },
+  science: {
+    easy: [
+      { type: 'mc', q: 'What is the chemical symbol for water?', opts: ['HO', 'H2O', 'O2', 'OH'], a: 1 },
+      { type: 'tf', q: 'The sun is a star.', a: 0 },
+      { type: 'mc', q: 'How many planets are in our solar system?', opts: ['7', '8', '9', '10'], a: 1 },
+      { type: 'mc', q: 'What is the largest organ in the human body?', opts: ['Liver', 'Brain', 'Skin', 'Heart'], a: 2 },
+    ],
+    mid: [
+      { type: 'mc', q: 'What gas do plants absorb from the atmosphere?', opts: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Hydrogen'], a: 2 },
+      { type: 'tf', q: 'Light travels faster than sound.', a: 0 },
+      { type: 'mc', q: 'Which element has the atomic number 1?', opts: ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], a: 1 },
+      { type: 'mc', q: 'What does DNA stand for?', opts: ['Deoxyribonucleic acid', 'Dinitric acid', 'Diribonucleic acid', 'Deoxynitric acid'], a: 0 },
+    ],
+    hard: [
+      { type: 'mc', q: 'What is the speed of light in a vacuum (approx)?', opts: ['300,000 km/s', '150,000 km/s', '1,080,000 km/h', '30,000 km/s'], a: 0 },
+      { type: 'tf', q: 'Mercury is the closest planet to the Sun.', a: 0 },
+      { type: 'mc', q: 'Who proposed the theory of general relativity?', opts: ['Isaac Newton', 'Niels Bohr', 'Albert Einstein', 'Max Planck'], a: 2 },
+      { type: 'mc', q: 'What particle did the LHC famously confirm in 2012?', opts: ['Top quark', 'Higgs boson', 'Neutrino', 'Tau lepton'], a: 1 },
+    ],
+  },
+};
+
+const DIFFICULTIES = [
+  { id: 'easy', label: 'Easy', sub: 'Warm up the neurons',     mult: 1, count: 5,  bars: 1 },
+  { id: 'mid',  label: 'Mid',  sub: 'Where most people land',  mult: 2, count: 10, bars: 2 },
+  { id: 'hard', label: 'Hard', sub: 'Genuinely tough',         mult: 3, count: 15, bars: 3 },
+];
+
+const TIMER_SECONDS = 15;
+const QUESTIONS_PER_MATCH = 5;
+
+// ───────────────────────── Persistent local state ─────────────────────────
+const STORAGE_KEY = 'bracket.v1';
+function loadStore() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch { return {}; }
+}
+function saveStore(s) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function useStore() {
+  const [store, setStore] = useState(() => {
+    const s = loadStore();
+    return {
+      streak: s.streak ?? 12,
+      lastPlayed: s.lastPlayed ?? null,
+      wins: s.wins ?? 38,
+      played: s.played ?? 60,
+      correctTotal: s.correctTotal ?? 80,
+      totalAnswered: s.totalAnswered ?? 108,
+      bestScore: s.bestScore ?? 4380,
+      mastery: s.mastery ?? { movies: 78, landmarks: 64, music: 51, history: 32, sports: 18, science: 22 },
+      darkMode: s.darkMode ?? true,
+    };
+  });
+  const update = useCallback((patch) => {
+    setStore(prev => {
+      const next = typeof patch === 'function' ? patch(prev) : { ...prev, ...patch };
+      saveStore(next);
+      return next;
+    });
+  }, []);
+  return [store, update];
+}
+
+// ───────────────────────── Shared bits ─────────────────────────
+function Brace({ size = 18, color, side = 'left' }) {
+  return (
+    <span style={{
+      fontFamily: MONO, fontWeight: 700, fontSize: size, color,
+      lineHeight: 1, display: 'inline-block',
+    }}>{side === 'left' ? '{' : '}'}</span>
+  );
+}
+
+function Logo({ t, size = 22 }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <Brace size={size} color={t.accent} side="left" />
+      <span style={{
+        fontFamily: SANS, fontWeight: 700, fontSize: size, letterSpacing: '0.02em',
+        color: t.text,
+      }}>BRACKET</span>
+      <Brace size={size} color={t.accent} side="right" />
+    </div>
+  );
+}
+
+function Pill({ t, children, tone = 'default', style = {} }) {
+  const map = {
+    default: { bg: t.surface, color: t.textDim, border: t.border },
+    accent:  { bg: t.accentSoft, color: t.accent, border: 'transparent' },
+    success: { bg: 'rgba(74,222,128,0.14)', color: t.success, border: 'transparent' },
+    warn:    { bg: 'rgba(255,180,84,0.14)', color: t.warn, border: 'transparent' },
+    danger:  { bg: 'rgba(255,107,107,0.14)', color: t.danger, border: 'transparent' },
+  };
+  const c = map[tone];
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '4px 10px', borderRadius: 100,
+      background: c.bg, color: c.color, border: `1px solid ${c.border}`,
+      fontFamily: MONO, fontSize: 11, fontWeight: 600, letterSpacing: '0.04em',
+      textTransform: 'uppercase',
+      ...style,
+    }}>{children}</span>
+  );
+}
+
+function PrimaryBtn({ t, children, full = true, onClick, icon, disabled }) {
+  return (
+    <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{
+      width: full ? '100%' : 'auto',
+      padding: '16px 22px', borderRadius: 18,
+      background: disabled
+        ? t.surface
+        : `linear-gradient(180deg, ${t.accent} 0%, ${shade(t.accent, -10)} 100%)`,
+      color: disabled ? t.textMute : '#fff',
+      border: disabled ? `1px solid ${t.border}` : 0,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      fontFamily: SANS, fontWeight: 600, fontSize: 16, letterSpacing: '0.01em',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+      boxShadow: disabled ? 'none' : t.accentGlow,
+      transition: 'transform 120ms ease',
+    }}
+    onMouseDown={e => !disabled && (e.currentTarget.style.transform = 'scale(0.98)')}
+    onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
+    onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}>
+      {children}
+      {icon}
+    </button>
+  );
+}
+
+function GhostBtn({ t, children, full = false, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      width: full ? '100%' : 'auto',
+      padding: '14px 18px', borderRadius: 16,
+      background: t.surface, color: t.text,
+      border: `1px solid ${t.border}`, cursor: 'pointer',
+      fontFamily: SANS, fontWeight: 500, fontSize: 15,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>{children}</button>
+  );
+}
+
+function Card({ t, children, style = {}, glow = false }) {
+  return (
+    <div style={{
+      background: t.surface, border: `1px solid ${t.border}`,
+      borderRadius: 22, padding: 18,
+      boxShadow: glow ? t.accentGlow : 'none',
+      ...style,
+    }}>{children}</div>
+  );
+}
+
+function Bg({ t, children, padTop = 60 }) {
+  return (
+    <div style={{
+      minHeight: '100%', height: '100%', background: t.bgGrad, color: t.text,
+      paddingTop: padTop, paddingBottom: 100, position: 'relative',
+      fontFamily: SANS, overflow: 'auto',
+    }}>{children}</div>
+  );
+}
+
+function Orbs({ dark }) {
+  if (!dark) return null;
+  return (
+    <Fragment>
+      <div style={{
+        position: 'absolute', width: 260, height: 260, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(77,123,255,0.55) 0%, transparent 60%)',
+        top: -60, left: -60, filter: 'blur(20px)', pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', width: 200, height: 200, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(140,90,255,0.35) 0%, transparent 60%)',
+        top: 280, right: -40, filter: 'blur(20px)', pointerEvents: 'none',
+      }} />
+    </Fragment>
+  );
+}
+
+function SectionTitle({ t, children, action, onAction }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>{children}</div>
+      {action && (
+        <div onClick={onAction} style={{ fontSize: 13, color: t.accent, fontFamily: MONO, cursor: onAction ? 'pointer' : 'default' }}>{action}</div>
+      )}
+    </div>
+  );
+}
+
+function BackHeader({ t, onBack, onMore }) {
+  const btn = (txt, click) => (
+    <div onClick={click} style={{
+      width: 38, height: 38, borderRadius: 100,
+      background: t.surface, border: `1px solid ${t.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 16, color: t.textDim, cursor: click ? 'pointer' : 'default',
+      userSelect: 'none',
+    }}>{txt}</div>
+  );
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      marginBottom: 12,
+    }}>
+      {btn('←', onBack)}
+      {btn('⋯', onMore)}
+    </div>
+  );
+}
+
+function BottomNav({ t, active, onNav }) {
+  const items = [
+    { id: 'home',  label: 'Home',  icon: '◇' },
+    { id: 'play',  label: 'Play',  icon: '▶' },
+    { id: 'board', label: 'Board', icon: '◷' },
+    { id: 'me',    label: 'Me',    icon: '◉' },
+  ];
+  return (
+    <div style={{
+      position: 'absolute', left: 16, right: 16, bottom: 18,
+      padding: '10px 8px',
+      borderRadius: 24,
+      background: t.surface,
+      border: `1px solid ${t.border}`,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      display: 'flex', justifyContent: 'space-around',
+    }}>
+      {items.map(it => {
+        const a = it.id === active;
+        return (
+          <div key={it.id} onClick={() => onNav(it.id)} style={{
+            flex: 1, textAlign: 'center', padding: '6px 4px',
+            color: a ? t.accent : t.textDim, cursor: 'pointer',
+          }}>
+            <div style={{ fontSize: 18, lineHeight: 1, marginBottom: 4 }}>{it.icon}</div>
+            <div style={{
+              fontFamily: MONO, fontSize: 10,
+              letterSpacing: '0.05em', textTransform: 'uppercase',
+              fontWeight: a ? 700 : 500,
+            }}>{it.label}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ───────────────────────── 1. ONBOARDING ─────────────────────────
+function ScreenOnboarding({ t, dark, onStart }) {
+  return (
+    <Bg t={t} padTop={70}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 28px', position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+          <Logo t={t} size={20} />
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 10, marginTop: 60, marginBottom: 20,
+          fontFamily: MONO, fontWeight: 700,
+          fontSize: 180, lineHeight: 1, color: t.accent,
+          textShadow: dark ? '0 0 60px rgba(77,123,255,0.6)' : 'none',
+        }}>
+          <span style={{ transform: 'rotate(-8deg)' }}>{'{'}</span>
+          <span style={{ fontSize: 80, color: t.text }}>?</span>
+          <span style={{ transform: 'rotate(8deg)' }}>{'}'}</span>
+        </div>
+
+        <h1 style={{
+          fontSize: 38, fontWeight: 700, lineHeight: 1.05,
+          margin: '40px 0 12px', textAlign: 'center', letterSpacing: '-0.02em',
+        }}>
+          Trivia, but<br />
+          <span style={{ color: t.accent }}>actually fun.</span>
+        </h1>
+        <p style={{
+          fontSize: 15, color: t.textDim, textAlign: 'center', margin: '0 0 36px',
+          lineHeight: 1.5,
+        }}>
+          Race friends, climb the bracket, prove who knows their stuff.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <PrimaryBtn t={t} onClick={onStart} icon={<span>→</span>}>Get started</PrimaryBtn>
+          <GhostBtn t={t} full onClick={onStart}>I have an account</GhostBtn>
+        </div>
+
+        <div style={{
+          marginTop: 32, fontFamily: MONO, fontSize: 10,
+          color: t.textMute, textAlign: 'center', letterSpacing: '0.15em',
+        }}>
+          {'</>'} EST 2026 {'</>'} v1.0.0
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 2. HOME ─────────────────────────
+function ModeCard({ t, title, subtitle, emoji, accent, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      padding: 16, borderRadius: 20,
+      background: accent
+        ? `linear-gradient(160deg, ${t.accent}, ${shade(t.accent, -30)})`
+        : t.surface,
+      border: `1px solid ${accent ? 'transparent' : t.border}`,
+      color: accent ? '#fff' : t.text,
+      boxShadow: accent ? t.accentGlow : 'none',
+      cursor: 'pointer', minHeight: 130, display: 'flex', flexDirection: 'column',
+      justifyContent: 'space-between',
+    }}>
+      <div style={{ fontSize: 26 }}>{emoji}</div>
+      <div>
+        <div style={{ fontSize: 16, fontWeight: 700 }}>{title}</div>
+        <div style={{
+          fontSize: 12, opacity: accent ? 0.85 : 0.6, marginTop: 2,
+        }}>{subtitle}</div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ t, label, value }) {
+  return (
+    <div style={{
+      padding: '14px 12px', borderRadius: 16,
+      background: t.surface, border: `1px solid ${t.border}`,
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>{value}</div>
+      <div style={{
+        fontFamily: MONO, fontSize: 10, color: t.textDim,
+        textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2,
+      }}>{label}</div>
+    </div>
+  );
+}
+
+function ScreenHome({ t, dark, store, onPickMode, onNav, onToggleTheme }) {
+  const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
+  const rank = '#142';
+  const days = ['M','T','W','T','F','S','S'];
+  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 6, marginBottom: 24,
+        }}>
+          <div>
+            <div style={{ fontSize: 13, color: t.textDim, fontFamily: MONO }}>// welcome back</div>
+            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>Hey, Layla</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div onClick={onToggleTheme} title="Toggle theme" style={{
+              width: 38, height: 38, borderRadius: 100,
+              background: t.surface, border: `1px solid ${t.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', fontSize: 16,
+            }}>{dark ? '☼' : '☾'}</div>
+            <div onClick={() => onNav('me')} style={{
+              width: 42, height: 42, borderRadius: 100,
+              background: `linear-gradient(135deg, ${t.accent} 0%, #8C5AFF 100%)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 700, fontSize: 15,
+              border: `2px solid ${t.border}`, cursor: 'pointer',
+            }}>L</div>
+          </div>
+        </div>
+
+        <Card t={t} glow style={{
+          padding: 22, marginBottom: 18,
+          background: dark
+            ? 'linear-gradient(135deg, rgba(77,123,255,0.25) 0%, rgba(140,90,255,0.18) 100%)'
+            : 'linear-gradient(135deg, #2E54E0 0%, #6E3FFF 100%)',
+          border: dark ? `1px solid rgba(77,123,255,0.35)` : 'none',
+          color: dark ? t.text : '#fff',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{
+                fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em',
+                opacity: 0.85, textTransform: 'uppercase',
+              }}>Daily streak</div>
+              <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1, marginTop: 6 }}>
+                {store.streak} <span style={{ fontSize: 18, opacity: 0.7 }}>days</span>
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6 }}>
+                Play today to keep it alive
+              </div>
+            </div>
+            <div style={{
+              width: 64, height: 64, borderRadius: 20,
+              background: 'rgba(255,255,255,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 30, border: '1px solid rgba(255,255,255,0.25)',
+            }}>🔥</div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 18, gap: 6 }}>
+            {days.map((d, i) => (
+              <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontFamily: MONO, fontSize: 10, opacity: 0.7, marginBottom: 4 }}>{d}</div>
+                <div style={{
+                  height: 6, borderRadius: 100,
+                  background: i < todayIdx ? 'rgba(255,255,255,0.95)'
+                    : i === todayIdx ? 'rgba(255,255,255,0.55)'
+                    : 'rgba(255,255,255,0.25)',
+                }} />
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+          <ModeCard t={t} title="Solo" subtitle="No timer, just vibes" emoji="🧠" onClick={() => onPickMode('solo')} />
+          <ModeCard t={t} title="Head-to-head" subtitle="Race a friend" emoji="⚡" accent onClick={() => onPickMode('team')} />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <SectionTitle t={t}>Your stats</SectionTitle>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          <Stat t={t} label="rank" value={rank} />
+          <Stat t={t} label="wins" value={store.wins} />
+          <Stat t={t} label="accuracy" value={`${accuracy}%`} />
+        </div>
+      </div>
+
+      <BottomNav t={t} active="home" onNav={onNav} />
+    </Bg>
+  );
+}
+
+// ───────────────────────── 3. CATEGORIES ─────────────────────────
+function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ marginTop: 8 }}>
+          <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
+            STEP 01 / 03
+          </div>
+          <h1 style={{ fontSize: 30, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
+            Pick a category
+          </h1>
+          <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
+            Or go random — let the bracket decide.
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr',
+          gap: 12, marginTop: 24,
+        }}>
+          {CATEGORIES.map((c) => {
+            const active = selected === c.id;
+            return (
+              <div key={c.id} onClick={() => onPick(c.id)} style={{
+                aspectRatio: '1 / 1.05',
+                borderRadius: 22, padding: 16,
+                background: active
+                  ? `linear-gradient(160deg, ${c.hue}, ${shade(c.hue, -40)})`
+                  : t.surface,
+                border: `1px solid ${active ? 'transparent' : t.border}`,
+                color: active ? '#fff' : t.text,
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                boxShadow: active ? `0 16px 30px ${c.hue}55` : 'none',
+                position: 'relative', overflow: 'hidden', cursor: 'pointer',
+                transition: 'transform 120ms ease',
+              }}>
+                {active && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'radial-gradient(circle at 80% 0%, rgba(255,255,255,0.35) 0%, transparent 50%)',
+                    pointerEvents: 'none',
+                  }} />
+                )}
+                <div style={{ fontSize: 30, position: 'relative' }}>{c.emoji}</div>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ fontSize: 17, fontWeight: 700 }}>{c.label}</div>
+                  <div style={{
+                    fontFamily: MONO, fontSize: 10,
+                    color: active ? 'rgba(255,255,255,0.85)' : t.textDim,
+                    marginTop: 2, letterSpacing: '0.05em',
+                  }}>{c.count} questions</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div onClick={onRandom} style={{
+          marginTop: 16, padding: 14, borderRadius: 18,
+          border: `1px dashed ${t.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          color: t.textDim, cursor: 'pointer',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>🎲</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>Random mix</div>
+              <div style={{ fontSize: 12 }}>One question from each</div>
+            </div>
+          </div>
+          <span style={{ fontFamily: MONO, color: t.accent }}>→</span>
+        </div>
+
+        <div style={{ marginTop: 22 }}>
+          <PrimaryBtn t={t} onClick={() => selected && onPick(selected, true)} disabled={!selected} icon={<span>→</span>}>
+            Continue
+          </PrimaryBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 4. DIFFICULTY ─────────────────────────
+function ScreenDifficulty({ t, dark, selected, onPick, onBack, onContinue }) {
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
+          STEP 02 / 03
+        </div>
+        <h1 style={{ fontSize: 30, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
+          Pick difficulty
+        </h1>
+        <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
+          Harder questions = bigger score multiplier.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
+          {DIFFICULTIES.map(l => {
+            const isSel = selected === l.id;
+            const color = l.id === 'easy' ? t.success : l.id === 'mid' ? t.warn : t.danger;
+            const tone = l.id === 'easy' ? 'success' : l.id === 'mid' ? 'warn' : 'danger';
+            return (
+              <div key={l.id} onClick={() => onPick(l.id)} style={{
+                padding: 18, borderRadius: 22,
+                background: isSel ? (dark ? 'rgba(77,123,255,0.14)' : '#fff') : t.surface,
+                border: `1.5px solid ${isSel ? t.accent : t.border}`,
+                boxShadow: isSel ? t.accentGlow : 'none',
+                display: 'flex', alignItems: 'center', gap: 14,
+                position: 'relative', cursor: 'pointer',
+              }}>
+                <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 40 }}>
+                  {[1,2,3].map(i => (
+                    <div key={i} style={{
+                      width: 8, height: i * 12 + 4,
+                      borderRadius: 3,
+                      background: i <= l.bars ? color : t.border,
+                    }} />
+                  ))}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 700 }}>{l.label}</div>
+                    <Pill t={t} tone={tone}>{l.mult}× score</Pill>
+                  </div>
+                  <div style={{ fontSize: 13, color: t.textDim, marginTop: 2 }}>{l.sub}</div>
+                </div>
+                <div style={{
+                  width: 22, height: 22, borderRadius: 100,
+                  border: `2px solid ${isSel ? t.accent : t.border}`,
+                  background: isSel ? t.accent : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontSize: 12,
+                }}>{isSel ? '✓' : ''}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 28 }}>
+          <PrimaryBtn t={t} onClick={onContinue} disabled={!selected} icon={<span>→</span>}>Continue</PrimaryBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 5. INVITE ─────────────────────────
+function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
+  const [tab, setTab] = useState('create');
+  const [joinCode, setJoinCode] = useState('');
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
+          STEP 03 / 03
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
+          Find your opponent
+        </h1>
+        <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
+          Create a room or join one with a code.
+        </p>
+
+        <div style={{
+          marginTop: 22, padding: 4, borderRadius: 14,
+          background: t.surface, border: `1px solid ${t.border}`,
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4,
+        }}>
+          {[['create','CREATE ROOM'],['join','JOIN ROOM']].map(([id, label]) => (
+            <div key={id} onClick={() => setTab(id)} style={{
+              padding: '10px', textAlign: 'center', borderRadius: 10,
+              background: tab === id ? t.accent : 'transparent',
+              color: tab === id ? '#fff' : t.textDim,
+              fontFamily: MONO, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            }}>{label}</div>
+          ))}
+        </div>
+
+        {tab === 'join' ? (
+          <div style={{ marginTop: 18 }}>
+            <input
+              value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,6))}
+              placeholder="ROOM CODE"
+              style={{
+                width: '100%', padding: '18px 16px', borderRadius: 16,
+                background: t.surface, border: `1px solid ${t.border}`,
+                color: t.text, fontFamily: MONO, fontSize: 22, fontWeight: 700,
+                letterSpacing: '0.4em', textAlign: 'center', outline: 'none',
+              }}
+            />
+            <div style={{ marginTop: 14 }}>
+              <PrimaryBtn t={t} onClick={() => joinCode.length === 6 && onJoin(joinCode)} disabled={joinCode.length !== 6} icon={<span>→</span>}>
+                Join room
+              </PrimaryBtn>
+            </div>
+          </div>
+        ) : (
+          <Fragment>
+            <div style={{ marginTop: 18 }}>
+              <SectionTitle t={t} action="all →">Quick invite</SectionTitle>
+            </div>
+            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { n: 'Omar',   s: 'online · last played 2m ago', online: true },
+                { n: 'Sarah',  s: 'online',                      online: true },
+                { n: 'Yousef', s: 'last seen 1h ago' },
+                { n: 'Noor',   s: 'last seen yesterday' },
+              ].map((f, i) => (
+                <div key={i} style={{
+                  padding: 12, borderRadius: 14,
+                  background: t.surface, border: `1px solid ${t.border}`,
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 100,
+                      background: `linear-gradient(135deg, ${i % 2 ? '#FF6B6B' : t.accent} 0%, ${i % 2 ? '#FFB454' : '#8C5AFF'} 100%)`,
+                      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 700, fontSize: 14,
+                    }}>{f.n[0]}</div>
+                    {f.online && <div style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: 12, height: 12, borderRadius: 100,
+                      background: t.success, border: `2px solid ${t.bg}`,
+                    }} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{f.n}</div>
+                    <div style={{ fontSize: 11, color: t.textDim, fontFamily: MONO }}>{f.s}</div>
+                  </div>
+                  <button onClick={() => onCreate(f.n)} style={{
+                    padding: '8px 14px', borderRadius: 100,
+                    background: f.online ? t.accent : t.surfaceStrong,
+                    color: f.online ? '#fff' : t.textDim,
+                    border: f.online ? 'none' : `1px solid ${t.border}`,
+                    fontFamily: MONO, fontSize: 11, fontWeight: 700,
+                    letterSpacing: '0.05em', cursor: 'pointer',
+                  }}>INVITE</button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <PrimaryBtn t={t} onClick={() => onCreate(null)} icon={<span>→</span>}>Generate room code</PrimaryBtn>
+            </div>
+          </Fragment>
+        )}
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 6. LOBBY ─────────────────────────
+function PlayerRow({ t, name, sub, rank, you, pending }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: 14,
+      opacity: pending ? 0.55 : 1,
+    }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: 100,
+        background: pending
+          ? `repeating-linear-gradient(45deg, ${t.border} 0 6px, transparent 6px 12px)`
+          : `linear-gradient(135deg, ${t.accent} 0%, #8C5AFF 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700, fontSize: 14,
+        border: `1px solid ${t.border}`,
+      }}>{pending ? '?' : name[0]}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>{name}</div>
+        <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{sub}</div>
+      </div>
+      {you && <Pill t={t} tone="accent">you</Pill>}
+      {rank && !you && <span style={{ fontFamily: MONO, fontSize: 12, color: t.textDim }}>{rank}</span>}
+    </div>
+  );
+}
+
+function Setting({ t, label, value, last }) {
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '10px 0',
+      borderBottom: last ? 'none' : `1px solid ${t.border}`,
+    }}>
+      <div style={{ fontSize: 13, color: t.textDim, fontFamily: MONO, textTransform: 'lowercase' }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>{value}</div>
+    </div>
+  );
+}
+
+function ScreenLobby({ t, dark, code, opponentName, category, difficulty, onBack, onStart }) {
+  const [opponentReady, setOpponentReady] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // simulate opponent joining after a short delay
+  useEffect(() => {
+    const id = setTimeout(() => setOpponentReady(true), 2400);
+    return () => clearTimeout(id);
+  }, []);
+  const cat = CATEGORIES.find(c => c.id === category);
+  const diff = DIFFICULTIES.find(d => d.id === difficulty);
+  const copy = () => {
+    try { navigator.clipboard?.writeText(code); } catch {}
+    setCopied(true); setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ textAlign: 'center', marginTop: 4 }}>
+          <Pill t={t} tone="accent">● live · {opponentReady ? 'opponent ready' : 'waiting for player 2'}</Pill>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: '14px 0 6px', letterSpacing: '-0.02em' }}>
+            Share this code
+          </h1>
+          <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
+            They'll find you on Play → Join with code
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 8,
+          margin: '28px 0 18px',
+        }}>
+          {code.split('').map((ch, i) => (
+            <div key={i} style={{
+              width: 44, height: 56, borderRadius: 14,
+              background: t.surface, border: `1px solid ${t.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: MONO, fontSize: 26, fontWeight: 700, color: t.accent,
+              boxShadow: dark ? 'inset 0 0 0 1px rgba(77,123,255,0.18)' : 'none',
+            }}>{ch}</div>
+          ))}
+        </div>
+
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 22,
+        }}>
+          <GhostBtn t={t} onClick={copy}>{copied ? '✓ Copied' : '⧉ Copy'}</GhostBtn>
+          <GhostBtn t={t} onClick={copy}>↑ Share link</GhostBtn>
+        </div>
+
+        <Card t={t} style={{ padding: 0, overflow: 'hidden' }}>
+          <PlayerRow t={t} name="Layla (you)" sub="ready" rank="#142" you />
+          <div style={{ height: 1, background: t.border }} />
+          {opponentReady
+            ? <PlayerRow t={t} name={opponentName || 'Omar'} sub="ready" rank="#218" />
+            : <PlayerRow t={t} name="Waiting…" sub="player 2" pending />
+          }
+        </Card>
+
+        <div style={{ marginTop: 16 }}>
+          <SectionTitle t={t}>Match</SectionTitle>
+        </div>
+        <Card t={t} style={{ marginTop: 10 }}>
+          <Setting t={t} label="Mode" value="Head-to-head" />
+          <Setting t={t} label="Category" value={cat ? cat.label : 'Random'} />
+          <Setting t={t} label="Difficulty" value={`${diff.label} · ${diff.mult}× score`} />
+          <Setting t={t} label="Timer" value={`${TIMER_SECONDS}s per question`} />
+          <Setting t={t} label="Questions" value={QUESTIONS_PER_MATCH} last />
+        </Card>
+
+        <div style={{ marginTop: 22 }}>
+          <PrimaryBtn t={t} onClick={onStart} disabled={!opponentReady} icon={<span>▶</span>}>
+            {opponentReady ? 'Start when ready' : 'Waiting for opponent…'}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 7. QUESTION (Team) ─────────────────────────
+function ScoreSide({ t, name, score, you, right }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      flexDirection: right ? 'row-reverse' : 'row',
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: 100,
+        background: `linear-gradient(135deg, ${right ? '#FF6B6B' : t.accent} 0%, ${right ? '#FFB454' : '#8C5AFF'} 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700, fontSize: 12,
+      }}>{name[0]}</div>
+      <div style={{ textAlign: right ? 'right' : 'left' }}>
+        <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{name}{you && ' (you)'}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{score}</div>
+      </div>
+    </div>
+  );
+}
+
+function TimerRing({ t, sec, total }) {
+  const pct = sec / total;
+  const r = 48;
+  const c = 2 * Math.PI * r;
+  const dash = c * pct;
+  const color = sec <= 5 ? t.danger : sec <= 8 ? t.warn : t.accent;
+  return (
+    <div style={{ position: 'relative', width: 120, height: 120 }}>
+      <svg width="120" height="120" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="60" cy="60" r={r} stroke={t.border} strokeWidth="6" fill="none" />
+        <circle cx="60" cy="60" r={r} stroke={color} strokeWidth="6" fill="none"
+          strokeDasharray={`${dash} ${c}`} strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 12px ${color}88)`, transition: 'stroke-dasharray 800ms linear, stroke 200ms' }}
+        />
+      </svg>
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{ fontSize: 32, fontWeight: 700, fontFamily: MONO, color, lineHeight: 1 }}>
+          {sec.toString().padStart(2, '0')}
+        </div>
+        <div style={{ fontSize: 10, color: t.textDim, fontFamily: MONO, marginTop: 2 }}>seconds</div>
+      </div>
+    </div>
+  );
+}
+
+function Option({ t, letter, text, selected, correct, wrong, locked, onClick }) {
+  let bg = t.surface, border = t.border, glow = 'none', textColor = t.text;
+  let letterBg = t.surfaceStrong, letterColor = t.accent;
+  if (selected && !correct && !wrong) { bg = t.accentSoft; border = t.accent; glow = t.accentGlow; letterBg = t.accent; letterColor = '#fff'; }
+  if (correct)                        { bg = 'rgba(74,222,128,0.14)'; border = t.success; letterBg = t.success; letterColor = '#fff'; }
+  if (wrong)                          { bg = 'rgba(255,107,107,0.14)'; border = t.danger;  letterBg = t.danger;  letterColor = '#fff'; }
+  return (
+    <div onClick={locked ? undefined : onClick} style={{
+      padding: '14px 14px', borderRadius: 16,
+      background: bg, border: `1.5px solid ${border}`,
+      boxShadow: glow,
+      display: 'flex', alignItems: 'center', gap: 12,
+      cursor: locked ? 'default' : 'pointer',
+      transition: 'background 160ms, border 160ms, box-shadow 160ms',
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: 10,
+        background: letterBg, color: letterColor,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: MONO, fontWeight: 700, fontSize: 14,
+        border: selected || correct || wrong ? 'none' : `1px solid ${t.border}`,
+      }}>{letter}</div>
+      <div style={{ fontSize: 15, fontWeight: 500, color: textColor, flex: 1 }}>{text}</div>
+      {correct && <span style={{ color: t.success, fontSize: 18 }}>✓</span>}
+      {wrong   && <span style={{ color: t.danger,  fontSize: 18 }}>✗</span>}
+    </div>
+  );
+}
+
+function BigChoice({ t, label, sub, tone, selected, correct, wrong, onClick, locked }) {
+  const c = tone === 'success' ? t.success : t.danger;
+  const isAnswered = correct || wrong;
+  return (
+    <div onClick={locked ? undefined : onClick} style={{
+      aspectRatio: '1 / 1', borderRadius: 22,
+      background: correct ? `${t.success}26` : wrong ? `${t.danger}26` : selected ? `${c}22` : t.surface,
+      border: `2px solid ${correct ? t.success : wrong ? t.danger : selected ? c : t.border}`,
+      boxShadow: (selected || isAnswered) ? `0 0 30px ${(correct ? t.success : wrong ? t.danger : c)}55` : 'none',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: 6, cursor: locked ? 'default' : 'pointer',
+      transition: 'background 160ms, border 160ms, box-shadow 160ms',
+    }}>
+      <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '0.04em',
+        color: correct ? t.success : wrong ? t.danger : selected ? c : t.text }}>{label}</div>
+      <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.15em' }}>{sub}</div>
+    </div>
+  );
+}
+
+function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
+                              yourScore, oppScore, oppName,
+                              selected, revealed, correctIdx, oppPickIdx, secLeft,
+                              onPick }) {
+  const cat = CATEGORIES.find(c => c.id === category);
+  const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
+
+  if (q.type === 'tf') {
+    const isTrueCorrect = q.a === 0;
+    const isFalseCorrect = q.a === 1;
+    return (
+      <Bg t={t} padTop={56}>
+        <Orbs dark={dark} />
+        <div style={{ padding: '0 20px', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+            <TimerBar t={t} sec={secLeft} total={TIMER_SECONDS} />
+          </div>
+
+          <div style={{
+            marginTop: 28, fontFamily: MONO, fontWeight: 700,
+            fontSize: 90, color: t.accent, lineHeight: 1, opacity: 0.18,
+            letterSpacing: '-0.05em',
+          }}>{String(qIdx+1).padStart(2,'0')}.</div>
+
+          <div style={{ marginTop: -50 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em' }}>
+              // {(cat?.label || 'MIX').toUpperCase()} · TRUE OR FALSE
+            </div>
+            <h2 style={{
+              fontSize: 26, fontWeight: 700, lineHeight: 1.2,
+              margin: '10px 0 32px', letterSpacing: '-0.02em',
+            }}>
+              {q.q}
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <BigChoice
+              t={t} label="TRUE" sub="A" tone="success"
+              selected={selected === 0}
+              correct={revealed && isTrueCorrect}
+              wrong={revealed && !isTrueCorrect && selected === 0}
+              locked={revealed || selected != null}
+              onClick={() => onPick(0)}
+            />
+            <BigChoice
+              t={t} label="FALSE" sub="B" tone="danger"
+              selected={selected === 1}
+              correct={revealed && isFalseCorrect}
+              wrong={revealed && !isFalseCorrect && selected === 1}
+              locked={revealed || selected != null}
+              onClick={() => onPick(1)}
+            />
+          </div>
+
+          <div style={{
+            marginTop: 26, display: 'flex', justifyContent: 'space-between',
+            fontFamily: MONO, fontSize: 12, color: t.textDim,
+            padding: '12px 16px', borderRadius: 14,
+            border: `1px solid ${t.border}`, background: t.surface,
+          }}>
+            <span>Layla <b style={{ color: t.text }}>{yourScore}</b></span>
+            <span>•</span>
+            <span>{oppName} <b style={{ color: t.text }}>{oppScore}</b></span>
+          </div>
+        </div>
+      </Bg>
+    );
+  }
+
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+          <Pill t={t} tone="accent">⚡ head-to-head</Pill>
+        </div>
+
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginTop: 14, padding: '12px 16px', borderRadius: 18,
+          background: t.surface, border: `1px solid ${t.border}`,
+        }}>
+          <ScoreSide t={t} name="Layla" score={yourScore} you />
+          <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, opacity: 0.7 }}>vs</div>
+          <ScoreSide t={t} name={oppName} score={oppScore} right />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0 10px' }}>
+          <TimerRing t={t} sec={secLeft} total={TIMER_SECONDS} />
+        </div>
+
+        <div style={{
+          fontFamily: MONO, fontSize: 11, color: t.textDim,
+          letterSpacing: '0.1em', textAlign: 'center',
+        }}>// {(cat?.label || 'MIX').toUpperCase()} · {(diffLabel || '').toUpperCase()}</div>
+        <h2 style={{
+          fontSize: 22, fontWeight: 700, lineHeight: 1.25,
+          textAlign: 'center', margin: '8px 0 22px',
+          letterSpacing: '-0.01em',
+        }}>{q.q}</h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {q.opts.map((text, i) => (
+            <Option
+              key={i}
+              t={t}
+              letter={String.fromCharCode(65 + i)}
+              text={text}
+              selected={selected === i}
+              correct={revealed && i === correctIdx}
+              wrong={revealed && selected === i && i !== correctIdx}
+              locked={revealed || selected != null}
+              onClick={() => onPick(i)}
+            />
+          ))}
+        </div>
+
+        {revealed && oppPickIdx != null && (
+          <div style={{
+            marginTop: 14, padding: 12, borderRadius: 14,
+            background: t.surface, border: `1px solid ${t.border}`,
+            fontSize: 13, color: t.textDim, fontFamily: MONO, textAlign: 'center',
+          }}>
+            {oppName} picked <b style={{ color: oppPickIdx === correctIdx ? t.success : t.danger }}>
+              {String.fromCharCode(65 + oppPickIdx)}
+            </b>
+          </div>
+        )}
+      </div>
+    </Bg>
+  );
+}
+
+function TimerBar({ t, sec, total }) {
+  const color = sec <= 5 ? t.danger : sec <= 8 ? t.warn : t.accent;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color }}>{sec.toString().padStart(2,'0')}s</span>
+      <div style={{ width: 80, height: 6, borderRadius: 100, background: t.border, overflow: 'hidden' }}>
+        <div style={{
+          width: `${(sec / total) * 100}%`, height: '100%', background: color,
+          boxShadow: `0 0 10px ${color}`, transition: 'width 800ms linear, background 200ms',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────── 8. QUESTION (Solo) ─────────────────────────
+const SOLO_FACTS = {
+  movies:    "Cinema's been around since the late 1800s — over 130 years of stories.",
+  history:   "Recorded human history spans roughly 5,000 years.",
+  landmarks: "The New Seven Wonders of the World were chosen by public vote in 2007.",
+  sports:    "The first modern Olympics were held in Athens in 1896.",
+  music:     "There are 12 unique pitch classes in Western music.",
+  science:   "There are 118 confirmed elements on the periodic table.",
+};
+
+function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
+                              selected, revealed, correctIdx, onPick, onNext }) {
+  const cat = CATEGORIES.find(c => c.id === category);
+  const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
+
+  if (q.type === 'tf') {
+    const isTrueCorrect = q.a === 0;
+    const isFalseCorrect = q.a === 1;
+    return (
+      <Bg t={t} padTop={56}>
+        <Orbs dark={dark} />
+        <div style={{ padding: '0 20px', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+            <Pill t={t}>🧠 solo · no timer</Pill>
+          </div>
+
+          <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
+            {Array.from({ length: total }).map((_, i) => (
+              <div key={i} style={{
+                flex: 1, height: 4, borderRadius: 100,
+                background: i < qIdx ? t.accent : i === qIdx ? t.text : t.border,
+                opacity: i <= qIdx ? 1 : 0.5,
+              }} />
+            ))}
+          </div>
+
+          <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em', marginTop: 22 }}>
+            // {(cat?.label || 'MIX').toUpperCase()} · TRUE OR FALSE
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 22px', letterSpacing: '-0.01em' }}>
+            {q.q}
+          </h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <BigChoice t={t} label="TRUE" sub="A" tone="success"
+              selected={selected === 0}
+              correct={revealed && isTrueCorrect}
+              wrong={revealed && !isTrueCorrect && selected === 0}
+              locked={revealed || selected != null}
+              onClick={() => onPick(0)} />
+            <BigChoice t={t} label="FALSE" sub="B" tone="danger"
+              selected={selected === 1}
+              correct={revealed && isFalseCorrect}
+              wrong={revealed && !isFalseCorrect && selected === 1}
+              locked={revealed || selected != null}
+              onClick={() => onPick(1)} />
+          </div>
+
+          {revealed && (
+            <div style={{
+              marginTop: 16, padding: 14, borderRadius: 14,
+              background: selected === q.a ? 'rgba(74,222,128,0.10)' : 'rgba(255,107,107,0.10)',
+              border: `1px solid ${selected === q.a ? t.success : t.danger}`,
+              fontSize: 13, color: t.text,
+            }}>
+              <div style={{ fontFamily: MONO, fontSize: 11, color: selected === q.a ? t.success : t.danger, fontWeight: 700, marginBottom: 4 }}>
+                {selected === q.a ? '✓ CORRECT · +100 PTS' : '✗ NOT QUITE'}
+              </div>
+              {SOLO_FACTS[category] || ''}
+            </div>
+          )}
+
+          <div style={{ marginTop: 14 }}>
+            <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>→</span>}>
+              {qIdx + 1 === total ? 'See results' : 'Next question'}
+            </PrimaryBtn>
+          </div>
+        </div>
+      </Bg>
+    );
+  }
+
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+          <Pill t={t}>🧠 solo · no timer</Pill>
+        </div>
+
+        <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} style={{
+              flex: 1, height: 4, borderRadius: 100,
+              background: i < qIdx ? t.accent : i === qIdx ? t.text : t.border,
+              opacity: i <= qIdx ? 1 : 0.5,
+            }} />
+          ))}
+        </div>
+
+        <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em', marginTop: 22 }}>
+          // {(cat?.label || 'MIX').toUpperCase()} · {(diffLabel || '').toUpperCase()}
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 14px', letterSpacing: '-0.01em' }}>
+          {q.q}
+        </h2>
+
+        <div style={{
+          height: 120, borderRadius: 18,
+          background: dark
+            ? 'repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 8px, rgba(255,255,255,0.02) 8px 16px)'
+            : 'repeating-linear-gradient(135deg, rgba(0,0,0,0.04) 0 8px, rgba(0,0,0,0.02) 8px 16px)',
+          border: `1px solid ${t.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: MONO, fontSize: 11, color: t.textMute,
+          letterSpacing: '0.15em', marginBottom: 18,
+        }}>[ {(cat?.emoji || '?')} {(cat?.label || 'mix').toUpperCase()} ]</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {q.opts.map((text, i) => (
+            <Option key={i}
+              t={t}
+              letter={String.fromCharCode(65 + i)}
+              text={text}
+              selected={selected === i}
+              correct={revealed && i === correctIdx}
+              wrong={revealed && selected === i && i !== correctIdx}
+              locked={revealed || selected != null}
+              onClick={() => onPick(i)} />
+          ))}
+        </div>
+
+        {revealed && (
+          <div style={{
+            marginTop: 16, padding: 14, borderRadius: 14,
+            background: selected === q.a ? 'rgba(74,222,128,0.10)' : 'rgba(255,107,107,0.10)',
+            border: `1px solid ${selected === q.a ? t.success : t.danger}`,
+            fontSize: 13, color: t.text,
+          }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: selected === q.a ? t.success : t.danger, fontWeight: 700, marginBottom: 4 }}>
+              {selected === q.a ? '✓ CORRECT · +100 PTS' : '✗ NOT QUITE'}
+            </div>
+            {SOLO_FACTS[category] || ''}
+          </div>
+        )}
+
+        <div style={{ marginTop: 14 }}>
+          <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>→</span>}>
+            {qIdx + 1 === total ? 'See results' : 'Next question'}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 9. RESULTS ─────────────────────────
+function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, total, avgTime, streak, onRematch, onHome }) {
+  const won = mode === 'team' ? yourScore > oppScore : (correct >= Math.ceil(total/2));
+  const tied = mode === 'team' && yourScore === oppScore;
+  const margin = Math.abs(yourScore - oppScore);
+  const symbol = mode === 'team' ? (won ? 'W' : tied ? 'T' : 'L') : (correct === total ? '★' : '✓');
+  const headline = mode === 'team'
+    ? (won ? 'You won!' : tied ? "It's a tie." : 'Lost — close one.')
+    : (correct === total ? 'Flawless!' : `${correct}/${total} correct`);
+  const sub = mode === 'team'
+    ? (tied ? 'Even matchup.' : `By ${margin} points. ${won ? 'Brutal.' : 'Rematch?'}`)
+    : `Nice run. +${yourScore} pts.`;
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative', textAlign: 'center' }}>
+        <div style={{
+          fontFamily: MONO, fontSize: 11, color: t.textDim,
+          letterSpacing: '0.15em', marginTop: 8,
+        }}>// MATCH COMPLETE</div>
+
+        <div style={{
+          margin: '14px 0 6px',
+          fontFamily: MONO, fontWeight: 700,
+          fontSize: 90, color: t.accent, lineHeight: 1,
+          textShadow: dark ? '0 0 50px rgba(77,123,255,0.55)' : 'none',
+          letterSpacing: '-0.04em',
+        }}>
+          {'{'}<span style={{ color: t.text }}>{symbol}</span>{'}'}
+        </div>
+
+        <h1 style={{ fontSize: 32, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
+          {headline}
+        </h1>
+        <p style={{ fontSize: 14, color: t.textDim, margin: '0 0 22px' }}>{sub}</p>
+
+        {mode === 'team' && (
+          <Card t={t} style={{ padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 100,
+                  background: `linear-gradient(135deg, ${t.accent} 0%, #8C5AFF 100%)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 700,
+                }}>L</div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Layla (you)</div>
+                  <Pill t={t} tone={won ? 'success' : tied ? 'default' : 'danger'}>
+                    {won ? `+${margin} vs avg` : tied ? '— even' : `-${margin} vs avg`}
+                  </Pill>
+                </div>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: MONO, color: won ? t.accent : t.text }}>{yourScore}</div>
+            </div>
+            <div style={{ height: 1, background: t.border, margin: '14px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 100,
+                  background: 'linear-gradient(135deg, #FF6B6B 0%, #FFB454 100%)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 700,
+                }}>{oppName[0]}</div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{oppName}</div>
+                  <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{won ? 'nice try' : 'gg'}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 700, fontFamily: MONO, color: won ? t.textDim : t.text }}>{oppScore}</div>
+            </div>
+          </Card>
+        )}
+
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 16,
+        }}>
+          <Stat t={t} label="correct" value={`${correct}/${total}`} />
+          <Stat t={t} label="avg time" value={mode === 'team' ? `${avgTime.toFixed(1)}s` : '—'} />
+          <Stat t={t} label="streak" value={streak} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
+          <PrimaryBtn t={t} onClick={onRematch} icon={<span>↻</span>}>Rematch</PrimaryBtn>
+          <GhostBtn t={t} full onClick={onHome}>Back to home</GhostBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 10. LEADERBOARD ─────────────────────────
+function Tab({ t, children, active, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      padding: '7px 14px', borderRadius: 100,
+      background: active ? t.accent : 'transparent',
+      color: active ? '#fff' : t.textDim,
+      fontSize: 12, fontWeight: 600, fontFamily: MONO, letterSpacing: '0.04em',
+      cursor: 'pointer',
+    }}>{children}</div>
+  );
+}
+
+function PodiumCol({ t, p, h }) {
+  const medalColor = p.rank === 1 ? '#FFD15C' : p.rank === 2 ? '#C7CDD9' : '#E08E50';
+  return (
+    <div style={{ flex: 1, textAlign: 'center', maxWidth: 90 }}>
+      <div style={{
+        width: 56, height: 56, borderRadius: 100, margin: '0 auto 8px',
+        background: `linear-gradient(135deg, ${p.avatar} 0%, ${shade(p.avatar, -40)} 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontWeight: 700, fontSize: 18,
+        border: p.rank === 1 ? `2px solid ${medalColor}` : `1px solid ${t.border}`,
+        boxShadow: p.rank === 1 ? `0 0 20px ${medalColor}88` : 'none',
+        position: 'relative',
+      }}>
+        {p.name[0]}
+        {p.rank === 1 && <div style={{
+          position: 'absolute', top: -10, right: -6, fontSize: 18,
+        }}>👑</div>}
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</div>
+      <div style={{ fontSize: 11, fontFamily: MONO, color: t.textDim, marginBottom: 8 }}>
+        {p.score.toLocaleString()}
+      </div>
+      <div style={{
+        height: h, borderRadius: '14px 14px 0 0',
+        background: p.rank === 1
+          ? `linear-gradient(180deg, ${t.accent}, ${shade(t.accent, -30)})`
+          : t.surface,
+        border: `1px solid ${p.rank === 1 ? 'transparent' : t.border}`,
+        borderBottom: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: p.rank === 1 ? '#fff' : t.textDim,
+        fontFamily: MONO, fontSize: 22, fontWeight: 700,
+      }}>{p.rank}</div>
+    </div>
+  );
+}
+
+function RankRow({ t, rank, name, score, you }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+      background: you ? t.accentSoft : 'transparent',
+    }}>
+      <div style={{
+        width: 28, textAlign: 'center', fontFamily: MONO, fontWeight: 700,
+        color: you ? t.accent : t.textDim, fontSize: 13,
+      }}>{rank}</div>
+      <div style={{
+        width: 32, height: 32, borderRadius: 100,
+        background: you
+          ? `linear-gradient(135deg, ${t.accent} 0%, #8C5AFF 100%)`
+          : t.surfaceStrong,
+        border: `1px solid ${t.border}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: you ? '#fff' : t.textDim, fontWeight: 700, fontSize: 13,
+      }}>{name[0]}</div>
+      <div style={{ flex: 1, fontSize: 14, fontWeight: you ? 700 : 500 }}>{name}</div>
+      <div style={{
+        fontFamily: MONO, fontSize: 13, fontWeight: 700,
+        color: you ? t.accent : t.text,
+      }}>{score.toLocaleString()}</div>
+    </div>
+  );
+}
+
+function ScreenLeaderboard({ t, dark, store, onNav }) {
+  const [tab, setTab] = useState('friends');
+  const top = [
+    { rank: 2, name: 'Yousef',   score: 9420,  avatar: '#FF6B6B' },
+    { rank: 1, name: 'Sarah',    score: 10240, avatar: '#FFB454' },
+    { rank: 3, name: 'Mohammed', score: 8980,  avatar: '#4ADE80' },
+  ];
+  const list = [
+    { rank: 4,  name: 'Noor',         score: 8450 },
+    { rank: 5,  name: 'Ahmed',        score: 8120 },
+    { rank: 6,  name: 'Fatima',       score: 7890 },
+    { rank: 7,  name: 'Khaled',       score: 7610 },
+    { rank: 142, name: 'Layla (you)', score: store.bestScore, you: true },
+  ];
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Leaderboard</h1>
+          <div style={{
+            padding: '6px 4px', borderRadius: 100,
+            background: t.surface, border: `1px solid ${t.border}`,
+            display: 'flex', gap: 2,
+          }}>
+            <Tab t={t} active={tab==='friends'} onClick={() => setTab('friends')}>Friends</Tab>
+            <Tab t={t} active={tab==='global'} onClick={() => setTab('global')}>Global</Tab>
+          </div>
+        </div>
+
+        <div style={{
+          fontFamily: MONO, fontSize: 11, color: t.textDim,
+          letterSpacing: '0.1em', marginTop: 6,
+        }}>// THIS WEEK · RESETS IN 3D 14H</div>
+
+        <div style={{
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          gap: 10, marginTop: 28, marginBottom: 8,
+        }}>
+          {top.map((p) => (
+            <PodiumCol key={p.rank} t={t} p={p} h={p.rank === 1 ? 100 : p.rank === 2 ? 80 : 64} />
+          ))}
+        </div>
+
+        <Card t={t} style={{ padding: 0, overflow: 'hidden', marginTop: 18 }}>
+          {list.map((p, i) => (
+            <Fragment key={p.rank}>
+              <RankRow t={t} {...p} />
+              {i < list.length - 1 && <div style={{ height: 1, background: t.border }} />}
+            </Fragment>
+          ))}
+        </Card>
+      </div>
+      <BottomNav t={t} active="board" onNav={onNav} />
+    </Bg>
+  );
+}
+
+// ───────────────────────── 11. PROFILE ─────────────────────────
+function ScreenProfile({ t, dark, store, onNav, onToggleTheme }) {
+  const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Profile</h1>
+          <div onClick={onToggleTheme} style={{
+            width: 38, height: 38, borderRadius: 100,
+            background: t.surface, border: `1px solid ${t.border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, cursor: 'pointer',
+          }}>⚙</div>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 22 }}>
+          <div style={{
+            width: 90, height: 90, borderRadius: 100, margin: '0 auto 12px',
+            background: `linear-gradient(135deg, ${t.accent} 0%, #8C5AFF 100%)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 700, fontSize: 38,
+            boxShadow: t.accentGlow,
+          }}>L</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>Layla A.</div>
+          <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, marginTop: 2 }}>
+            @layla · joined apr 2026
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 10 }}>
+            <Pill t={t} tone="accent">RANK #142</Pill>
+            <Pill t={t} tone="warn">🔥 {store.streak} STREAK</Pill>
+          </div>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 16,
+          }}>
+            <Stat t={t} label="wins" value={store.wins} />
+            <Stat t={t} label="played" value={store.played} />
+            <Stat t={t} label="accuracy" value={`${accuracy}%`} />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 22 }}>
+          <SectionTitle t={t}>Category mastery</SectionTitle>
+        </div>
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {CATEGORIES.map(c => {
+            const pct = Math.max(0, Math.min(100, store.mastery?.[c.id] ?? 0));
+            return (
+              <div key={c.id} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: 12, borderRadius: 14,
+                background: t.surface, border: `1px solid ${t.border}`,
+              }}>
+                <div style={{ fontSize: 22 }}>{c.emoji}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{c.label}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 12, color: t.textDim }}>{pct}%</span>
+                  </div>
+                  <div style={{ height: 4, borderRadius: 100, background: t.border, overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${pct}%`, height: '100%',
+                      background: c.hue, boxShadow: `0 0 8px ${c.hue}`,
+                      transition: 'width 600ms ease',
+                    }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 20 }}>
+          <SectionTitle t={t} action="all →">Achievements</SectionTitle>
+        </div>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 10,
+        }}>
+          {[
+            { e: '🏆', l: 'First win',     unlocked: store.wins >= 1 },
+            { e: '🔥', l: '7-day streak',  unlocked: store.streak >= 7 },
+            { e: '⚡', l: 'Speed demon',   unlocked: store.bestScore >= 1000 },
+          ].map((a, i) => (
+            <div key={i} style={{
+              padding: 14, borderRadius: 16, textAlign: 'center',
+              background: t.surface, border: `1px solid ${t.border}`,
+              opacity: a.unlocked ? 1 : 0.4,
+              filter: a.unlocked ? 'none' : 'grayscale(0.6)',
+            }}>
+              <div style={{ fontSize: 28 }}>{a.e}</div>
+              <div style={{ fontSize: 11, color: t.textDim, marginTop: 4, fontFamily: MONO }}>{a.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <BottomNav t={t} active="me" onNav={onNav} />
+    </Bg>
+  );
+}
+
+// ───────────────────────── Match logic ─────────────────────────
+function buildQuestions(category, difficulty, count) {
+  // build a question list from one category+difficulty, or "mix" if category=null
+  const pool = [];
+  if (category) {
+    pool.push(...(QUESTIONS[category]?.[difficulty] || []));
+  } else {
+    Object.keys(QUESTIONS).forEach(cat => {
+      pool.push(...(QUESTIONS[cat][difficulty] || []).map(q => ({ ...q, _cat: cat })));
+    });
+  }
+  // shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
+}
+
+function tieredPoints(secLeft) {
+  // 15s timer; full points if sec >= 10, 75% if 5-9, 50% if 1-4, 0 if 0
+  if (secLeft >= 10) return 1.0;
+  if (secLeft >= 5)  return 0.75;
+  if (secLeft >= 1)  return 0.5;
+  return 0;
+}
+
+function genRoomCode() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += A[Math.floor(Math.random() * A.length)];
+  return s;
+}
+
+// ───────────────────────── App ─────────────────────────
+function App() {
+  const [store, updateStore] = useStore();
+  const dark = store.darkMode;
+  const t = dark ? TOKENS.dark : TOKENS.light;
+
+  // navigation: which top-level screen
+  const [screen, setScreen] = useState('onboarding'); // onboarding | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile
+
+  // match config
+  const [mode, setMode] = useState('team'); // 'solo' | 'team'
+  const [category, setCategory] = useState(null);
+  const [difficulty, setDifficulty] = useState('mid');
+  const [roomCode, setRoomCode] = useState(genRoomCode());
+  const [opponentName, setOpponentName] = useState('Omar');
+
+  // match state
+  const [questions, setQuestions] = useState([]);
+  const [qIdx, setQIdx] = useState(0);
+  const [yourScore, setYourScore] = useState(0);
+  const [oppScore, setOppScore] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [oppPickIdx, setOppPickIdx] = useState(null);
+  const [secLeft, setSecLeft] = useState(TIMER_SECONDS);
+  const [yourTimes, setYourTimes] = useState([]);
+  const [yourCorrect, setYourCorrect] = useState(0);
+  const advanceTimer = useRef(null);
+  const tickTimer = useRef(null);
+
+  const toggleTheme = () => updateStore({ darkMode: !dark });
+
+  // ─── timer ─────────────────────────────────────────
+  useEffect(() => {
+    if (screen !== 'question' || mode !== 'team' || revealed || selected != null) return;
+    if (secLeft <= 0) { onTimerExpired(); return; }
+    tickTimer.current = setTimeout(() => setSecLeft(s => s - 1), 1000);
+    return () => clearTimeout(tickTimer.current);
+  }, [screen, mode, secLeft, revealed, selected]);
+
+  // ─── opponent simulation ─────────────────────────
+  // schedule a simulated opponent answer once a question loads
+  const oppPickedAtRef = useRef(null);
+  useEffect(() => {
+    if (screen !== 'question' || mode !== 'team') return;
+    oppPickedAtRef.current = null;
+    setOppPickIdx(null);
+    const q = questions[qIdx];
+    if (!q) return;
+    // probability opponent gets it right by difficulty
+    const accByDiff = { easy: 0.85, mid: 0.65, hard: 0.45 };
+    const acc = accByDiff[difficulty] ?? 0.6;
+    const optsLen = q.type === 'tf' ? 2 : q.opts.length;
+    const correctIdx = q.a;
+    const oppCorrect = Math.random() < acc;
+    const pick = oppCorrect ? correctIdx : (Math.floor(Math.random() * (optsLen - 1)) + correctIdx + 1) % optsLen;
+    // when does opponent answer? somewhere between 3s and 13s
+    const delay = 3000 + Math.random() * 10000;
+    const id = setTimeout(() => {
+      const remainingSec = Math.max(0, TIMER_SECONDS - Math.round(delay / 1000));
+      oppPickedAtRef.current = { pick, remainingSec, correct: oppCorrect };
+    }, delay);
+    return () => clearTimeout(id);
+  }, [screen, mode, qIdx, questions, difficulty]);
+
+  // ─── pick answer (team) ────────────────────────
+  const pickTeam = (idx) => {
+    if (revealed || selected != null) return;
+    setSelected(idx);
+    const q = questions[qIdx];
+    const isRight = idx === q.a;
+    const usedSec = TIMER_SECONDS - secLeft;
+    setYourTimes(ts => [...ts, usedSec]);
+    if (isRight) setYourCorrect(c => c + 1);
+    // tiered scoring
+    const diff = DIFFICULTIES.find(d => d.id === difficulty);
+    const tier = tieredPoints(secLeft);
+    const earned = isRight ? Math.round(100 * diff.mult * tier) : 0;
+    setYourScore(s => s + earned);
+    // resolve opponent
+    const oppRes = oppPickedAtRef.current;
+    let oppPick, oppRem, oppCorrect;
+    if (oppRes) {
+      oppPick = oppRes.pick; oppRem = oppRes.remainingSec; oppCorrect = oppRes.correct;
+    } else {
+      // opponent hasn't answered yet — assume they answer right after, slower
+      const accByDiff = { easy: 0.85, mid: 0.65, hard: 0.45 };
+      oppCorrect = Math.random() < (accByDiff[difficulty] ?? 0.6);
+      const optsLen = q.type === 'tf' ? 2 : q.opts.length;
+      oppPick = oppCorrect ? q.a : (Math.floor(Math.random() * (optsLen - 1)) + q.a + 1) % optsLen;
+      oppRem = Math.max(0, secLeft - 1 - Math.floor(Math.random() * 4));
+    }
+    const oppEarned = oppCorrect ? Math.round(100 * diff.mult * tieredPoints(oppRem)) : 0;
+    setOppScore(s => s + oppEarned);
+    setOppPickIdx(oppPick);
+    setRevealed(true);
+    advanceTimer.current = setTimeout(advanceTeam, 2000);
+  };
+
+  const onTimerExpired = () => {
+    if (revealed || selected != null) return;
+    setYourTimes(ts => [...ts, TIMER_SECONDS]);
+    // resolve opponent: maybe they answered, maybe not
+    const oppRes = oppPickedAtRef.current;
+    let oppPick = null, oppEarned = 0, oppCorrect = false;
+    const q = questions[qIdx];
+    const diff = DIFFICULTIES.find(d => d.id === difficulty);
+    if (oppRes) {
+      oppPick = oppRes.pick; oppCorrect = oppRes.correct;
+      oppEarned = oppCorrect ? Math.round(100 * diff.mult * tieredPoints(oppRes.remainingSec)) : 0;
+    }
+    setOppScore(s => s + oppEarned);
+    setOppPickIdx(oppPick);
+    setSelected(-1); // marker for "didn't answer"
+    setRevealed(true);
+    advanceTimer.current = setTimeout(advanceTeam, 2000);
+  };
+
+  const advanceTeam = () => {
+    if (qIdx + 1 >= questions.length) {
+      finishMatch();
+    } else {
+      setQIdx(qIdx + 1);
+      setSelected(null);
+      setRevealed(false);
+      setOppPickIdx(null);
+      setSecLeft(TIMER_SECONDS);
+    }
+  };
+
+  // ─── pick answer (solo) ────────────────────────
+  const pickSolo = (idx) => {
+    if (revealed || selected != null) return;
+    setSelected(idx);
+    const q = questions[qIdx];
+    const isRight = idx === q.a;
+    if (isRight) {
+      setYourScore(s => s + 100);
+      setYourCorrect(c => c + 1);
+    }
+    setRevealed(true);
+  };
+
+  const advanceSolo = () => {
+    if (qIdx + 1 >= questions.length) {
+      finishMatch();
+    } else {
+      setQIdx(qIdx + 1);
+      setSelected(null);
+      setRevealed(false);
+    }
+  };
+
+  const finishMatch = () => {
+    clearTimeout(advanceTimer.current);
+    clearTimeout(tickTimer.current);
+    // update store
+    const won = mode === 'team' ? yourScore > oppScore : yourCorrect >= Math.ceil(questions.length/2);
+    updateStore(prev => {
+      const lastKey = prev.lastPlayed;
+      const today = todayKey();
+      let newStreak = prev.streak;
+      if (lastKey !== today) newStreak = (lastKey ? prev.streak : prev.streak) + 1;
+      const masteryDelta = Math.round((yourCorrect / questions.length) * (DIFFICULTIES.find(d=>d.id===difficulty).mult * 4));
+      const nextMastery = { ...(prev.mastery || {}) };
+      if (category) {
+        nextMastery[category] = Math.max(0, Math.min(100, (nextMastery[category] ?? 0) + masteryDelta - 2));
+      }
+      return {
+        ...prev,
+        streak: newStreak,
+        lastPlayed: today,
+        wins: prev.wins + (won ? 1 : 0),
+        played: prev.played + 1,
+        correctTotal: prev.correctTotal + yourCorrect,
+        totalAnswered: prev.totalAnswered + questions.length,
+        bestScore: Math.max(prev.bestScore, yourScore),
+        mastery: nextMastery,
+      };
+    });
+    setScreen('results');
+  };
+
+  // ─── flow handlers ─────────────────────────────
+  const startMatch = () => {
+    const qs = buildQuestions(category, difficulty, QUESTIONS_PER_MATCH);
+    setQuestions(qs);
+    setQIdx(0);
+    setYourScore(0); setOppScore(0);
+    setYourTimes([]); setYourCorrect(0);
+    setSelected(null); setRevealed(false); setOppPickIdx(null);
+    setSecLeft(TIMER_SECONDS);
+    setScreen('question');
+  };
+
+  const onPickMode = (m) => {
+    setMode(m);
+    setCategory(null);
+    setScreen('categories');
+  };
+
+  const onNav = (id) => {
+    if (id === 'home')  setScreen('home');
+    if (id === 'play')  { setMode('team'); setCategory(null); setScreen('categories'); }
+    if (id === 'board') setScreen('leaderboard');
+    if (id === 'me')    setScreen('profile');
+  };
+
+  // cleanup timers on screen change
+  useEffect(() => () => {
+    clearTimeout(advanceTimer.current);
+    clearTimeout(tickTimer.current);
+  }, []);
+
+  // ─── render ────────────────────────────────────
+  const q = questions[qIdx];
+  const avgTime = yourTimes.length ? yourTimes.reduce((a,b)=>a+b,0)/yourTimes.length : 0;
+
+  let body;
+  if (screen === 'onboarding') {
+    body = <ScreenOnboarding t={t} dark={dark} onStart={() => setScreen('home')} />;
+  } else if (screen === 'home') {
+    body = <ScreenHome t={t} dark={dark} store={store}
+      onPickMode={onPickMode}
+      onNav={onNav}
+      onToggleTheme={toggleTheme}
+    />;
+  } else if (screen === 'categories') {
+    body = <ScreenCategories t={t} dark={dark}
+      selected={category}
+      onPick={(id, advance) => { setCategory(id); if (advance) setScreen('difficulty'); }}
+      onBack={() => setScreen('home')}
+      onRandom={() => { setCategory(null); setScreen('difficulty'); }}
+    />;
+  } else if (screen === 'difficulty') {
+    body = <ScreenDifficulty t={t} dark={dark}
+      selected={difficulty}
+      onPick={setDifficulty}
+      onBack={() => setScreen('categories')}
+      onContinue={() => {
+        if (mode === 'solo') startMatch();
+        else setScreen('invite');
+      }}
+    />;
+  } else if (screen === 'invite') {
+    body = <ScreenInvite t={t} dark={dark}
+      onBack={() => setScreen('difficulty')}
+      onCreate={(name) => {
+        if (name) setOpponentName(name);
+        setRoomCode(genRoomCode());
+        setScreen('lobby');
+      }}
+      onJoin={(code) => {
+        setRoomCode(code);
+        setOpponentName('Omar');
+        setScreen('lobby');
+      }}
+    />;
+  } else if (screen === 'lobby') {
+    body = <ScreenLobby t={t} dark={dark}
+      code={roomCode}
+      opponentName={opponentName}
+      category={category}
+      difficulty={difficulty}
+      onBack={() => setScreen('invite')}
+      onStart={startMatch}
+    />;
+  } else if (screen === 'question' && q) {
+    if (mode === 'team') {
+      body = <ScreenQuestionTeam t={t} dark={dark}
+        q={q}
+        qIdx={qIdx}
+        total={questions.length}
+        category={q._cat || category}
+        difficulty={difficulty}
+        yourScore={yourScore}
+        oppScore={oppScore}
+        oppName={opponentName}
+        selected={selected}
+        revealed={revealed}
+        correctIdx={q.a}
+        oppPickIdx={oppPickIdx}
+        secLeft={secLeft}
+        onPick={pickTeam}
+      />;
+    } else {
+      body = <ScreenQuestionSolo t={t} dark={dark}
+        q={q}
+        qIdx={qIdx}
+        total={questions.length}
+        category={q._cat || category}
+        difficulty={difficulty}
+        selected={selected}
+        revealed={revealed}
+        correctIdx={q.a}
+        onPick={pickSolo}
+        onNext={advanceSolo}
+      />;
+    }
+  } else if (screen === 'results') {
+    body = <ScreenResults t={t} dark={dark}
+      mode={mode}
+      yourScore={yourScore}
+      oppScore={oppScore}
+      oppName={opponentName}
+      correct={yourCorrect}
+      total={questions.length || QUESTIONS_PER_MATCH}
+      avgTime={avgTime}
+      streak={store.streak}
+      onRematch={startMatch}
+      onHome={() => setScreen('home')}
+    />;
+  } else if (screen === 'leaderboard') {
+    body = <ScreenLeaderboard t={t} dark={dark} store={store} onNav={onNav} />;
+  } else if (screen === 'profile') {
+    body = <ScreenProfile t={t} dark={dark} store={store} onNav={onNav} onToggleTheme={toggleTheme} />;
+  } else {
+    body = <ScreenHome t={t} dark={dark} store={store} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
+  }
+
+  return (
+    <div className="phone" style={{ background: t.bg, color: t.text }}>
+      <div className="screen" key={screen + ':' + qIdx} style={{ height: '100%', minHeight: '100%' }}>
+        {body}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
