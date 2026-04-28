@@ -556,8 +556,8 @@ function ScreenOnboarding({ t, dark, onStart }) {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <PrimaryBtn t={t} onClick={onStart} icon={<span>→</span>}>Get started</PrimaryBtn>
-          <GhostBtn t={t} full onClick={onStart}>I have an account</GhostBtn>
+          <PrimaryBtn t={t} onClick={() => onStart('signup')} icon={<span>→</span>}>Get started</PrimaryBtn>
+          <GhostBtn t={t} full onClick={() => onStart('login')}>I have an account</GhostBtn>
         </div>
 
         <div style={{
@@ -567,6 +567,542 @@ function ScreenOnboarding({ t, dark, onStart }) {
           {'</>'} EST 2026 {'</>'} v1.0.0
         </div>
       </div>
+    </Bg>
+  );
+}
+
+// ───────────────────────── 1b. AUTH ─────────────────────────
+function AuthTabs({ t, mode, onChange }) {
+  const tab = (id, label) => {
+    const a = mode === id;
+    return (
+      <div onClick={() => onChange(id)} style={{
+        flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: 12,
+        background: a ? t.surfaceStrong : 'transparent',
+        color: a ? t.text : t.textDim,
+        fontWeight: a ? 700 : 500, fontSize: 14, cursor: 'pointer',
+        transition: 'all 160ms ease',
+        boxShadow: a ? '0 1px 0 rgba(255,255,255,0.06)' : 'none',
+      }}>{label}</div>
+    );
+  };
+  return (
+    <div style={{
+      display: 'flex', padding: 4, borderRadius: 16,
+      background: t.surface, border: `1px solid ${t.border}`,
+      marginBottom: 24,
+    }}>
+      {tab('signup', 'Sign up')}
+      {tab('login',  'Log in')}
+    </div>
+  );
+}
+
+function ProviderBtn({ t, icon, label, onClick, brand }) {
+  // brand: 'apple' | 'google' | null  (null = neutral surface)
+  const styles = brand === 'apple'
+    ? { bg: '#000', fg: '#fff', border: 'transparent' }
+    : brand === 'google'
+    ? { bg: '#fff', fg: '#1f1f1f', border: 'rgba(0,0,0,0.1)' }
+    : { bg: t.surface, fg: t.text, border: t.border };
+  return (
+    <button onClick={onClick} style={{
+      width: '100%', padding: '14px 18px', borderRadius: 16,
+      background: styles.bg, color: styles.fg,
+      border: `1px solid ${styles.border}`, cursor: 'pointer',
+      fontFamily: SANS, fontWeight: 600, fontSize: 15,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+    }}>
+      <span style={{ display: 'inline-flex', width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+const AppleIcon = ({ color = '#fff' }) => (
+  <svg width="18" height="20" viewBox="0 0 24 24" fill={color} xmlns="http://www.w3.org/2000/svg">
+    <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98C13.91 1.7 15.144.96 16.205.93c.064.005.16.5.16.5zM20.5 17.49c-.5 1.16-1.05 2.27-1.94 3.21-.84.89-1.86 1.4-2.96 1.42-1.07.02-1.43-.65-2.66-.65-1.23 0-1.62.62-2.66.66-1.07.04-1.88-.95-2.74-1.91C5.55 18.05 4 14.4 5.69 11.97c.84-1.21 2.34-1.97 3.94-1.99 1.05-.02 2.05.71 2.69.71.66 0 1.86-.88 3.13-.75.53.02 2.03.21 2.99 1.61-.08.05-1.79 1.04-1.77 3.1.02 2.46 2.13 3.28 2.16 3.29-.02.06-.34 1.16-.83 2.55z" />
+  </svg>
+);
+
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.83z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/>
+  </svg>
+);
+
+const MailIcon = ({ color }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="5" width="18" height="14" rx="2"/>
+    <path d="M3 7l9 7 9-7"/>
+  </svg>
+);
+
+const PhoneIcon = ({ color }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="6" y="2" width="12" height="20" rx="3"/>
+    <line x1="11" y1="18" x2="13" y2="18"/>
+  </svg>
+);
+
+function ScreenAuth({ t, dark, mode, setMode, onPick, onBack }) {
+  const isSignup = mode === 'signup';
+  return (
+    <Bg t={t} padTop={56} padBottom={40}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 24px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4, marginBottom: 28 }}>
+          <Logo t={t} size={18} />
+        </div>
+
+        <h1 style={{
+          fontSize: 30, fontWeight: 700, lineHeight: 1.1,
+          margin: '0 0 10px', letterSpacing: '-0.02em', textAlign: 'center',
+        }}>
+          {isSignup ? <>Create your<br/><span style={{ color: t.accent }}>account</span></>
+                    : <>Welcome<br/><span style={{ color: t.accent }}>back</span></>}
+        </h1>
+        <p style={{
+          fontSize: 14, color: t.textDim, textAlign: 'center',
+          margin: '0 0 28px', lineHeight: 1.5,
+        }}>
+          {isSignup
+            ? 'Pick a way to sign up. Takes 10 seconds.'
+            : 'Log back in to keep your streak alive.'}
+        </p>
+
+        <AuthTabs t={t} mode={mode} onChange={setMode} />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <ProviderBtn t={t} brand="apple" icon={<AppleIcon />}
+            label={`${isSignup ? 'Sign up' : 'Continue'} with Apple`}
+            onClick={() => onPick('apple')} />
+          <ProviderBtn t={t} brand="google" icon={<GoogleIcon />}
+            label={`${isSignup ? 'Sign up' : 'Continue'} with Google`}
+            onClick={() => onPick('google')} />
+
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            margin: '8px 0', color: t.textMute, fontFamily: MONO, fontSize: 11,
+            letterSpacing: '0.1em',
+          }}>
+            <div style={{ flex: 1, height: 1, background: t.border }} />
+            OR
+            <div style={{ flex: 1, height: 1, background: t.border }} />
+          </div>
+
+          <ProviderBtn t={t} icon={<MailIcon color={t.text} />}
+            label={`${isSignup ? 'Sign up' : 'Continue'} with email`}
+            onClick={() => onPick('email')} />
+          <ProviderBtn t={t} icon={<PhoneIcon color={t.text} />}
+            label={`${isSignup ? 'Sign up' : 'Continue'} with phone`}
+            onClick={() => onPick('phone')} />
+        </div>
+
+        <div style={{
+          marginTop: 22, fontSize: 12, color: t.textDim,
+          textAlign: 'center', lineHeight: 1.5,
+        }}>
+          {isSignup
+            ? <>By continuing you agree to our <span style={{ color: t.accent }}>Terms</span> and <span style={{ color: t.accent }}>Privacy</span>.</>
+            : <>Don't have an account? <span onClick={() => setMode('signup')} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>Sign up</span></>}
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+function AuthInput({ t, label, value, onChange, type = 'text', placeholder, autoFocus, prefix, error }) {
+  return (
+    <label style={{ display: 'block', marginBottom: 14 }}>
+      <div style={{
+        fontFamily: MONO, fontSize: 11, color: t.textDim,
+        letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8,
+      }}>{label}</div>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        background: t.surface, border: `1px solid ${error ? t.danger : t.border}`,
+        borderRadius: 14, padding: '0 14px',
+      }}>
+        {prefix && (
+          <span style={{
+            color: t.textDim, fontFamily: MONO, fontSize: 14, paddingRight: 8,
+            borderRight: `1px solid ${t.border}`, marginRight: 10,
+          }}>{prefix}</span>
+        )}
+        <input type={type} value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder} autoFocus={autoFocus}
+          style={{
+            flex: 1, padding: '14px 0', background: 'transparent', border: 0,
+            outline: 'none', color: t.text, fontFamily: SANS, fontSize: 15,
+          }} />
+      </div>
+      {error && (
+        <div style={{ marginTop: 6, color: t.danger, fontSize: 12 }}>{error}</div>
+      )}
+    </label>
+  );
+}
+
+function ScreenAuthEmail({ t, dark, mode, onBack, onSubmit }) {
+  const isSignup = mode === 'signup';
+  const [name, setName]   = useState('');
+  const [email, setEmail] = useState('');
+  const [pwd, setPwd]     = useState('');
+  const [err, setErr]     = useState(null);
+
+  const submit = () => {
+    if (isSignup && !name.trim()) return setErr({ field: 'name', msg: 'Tell us your name.' });
+    if (!email.includes('@'))     return setErr({ field: 'email', msg: 'Enter a valid email.' });
+    if (pwd.length < 6)           return setErr({ field: 'pwd', msg: 'At least 6 characters.' });
+    setErr(null);
+    onSubmit({ name: name.trim() || 'Layla', email });
+  };
+
+  return (
+    <Bg t={t} padTop={56} padBottom={40}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 24px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <h1 style={{
+          fontSize: 28, fontWeight: 700, lineHeight: 1.15,
+          margin: '8px 0 6px', letterSpacing: '-0.02em',
+        }}>
+          {isSignup ? 'Sign up with email' : 'Log in with email'}
+        </h1>
+        <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 24px' }}>
+          {isSignup ? 'We just need a few basics.' : 'Welcome back — pick up where you left off.'}
+        </p>
+
+        {isSignup && (
+          <AuthInput t={t} label="Name" value={name} onChange={setName}
+            placeholder="Your display name" autoFocus
+            error={err?.field === 'name' ? err.msg : null} />
+        )}
+        <AuthInput t={t} label="Email" type="email" value={email} onChange={setEmail}
+          placeholder="you@example.com" autoFocus={!isSignup}
+          error={err?.field === 'email' ? err.msg : null} />
+        <AuthInput t={t} label="Password" type="password" value={pwd} onChange={setPwd}
+          placeholder="••••••••"
+          error={err?.field === 'pwd' ? err.msg : null} />
+
+        {!isSignup && (
+          <div style={{
+            textAlign: 'right', fontSize: 13, color: t.accent,
+            margin: '-4px 0 18px', cursor: 'pointer', fontWeight: 600,
+          }}>Forgot password?</div>
+        )}
+
+        <div style={{ marginTop: 8 }}>
+          <PrimaryBtn t={t} onClick={submit} icon={<span>→</span>}>
+            {isSignup ? 'Create account' : 'Log in'}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </Bg>
+  );
+}
+
+const COUNTRIES = [
+  { code: 'US', name: 'United States',        dial: '+1',   flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom',       dial: '+44',  flag: '🇬🇧' },
+  { code: 'CA', name: 'Canada',               dial: '+1',   flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia',            dial: '+61',  flag: '🇦🇺' },
+  { code: 'DE', name: 'Germany',              dial: '+49',  flag: '🇩🇪' },
+  { code: 'FR', name: 'France',               dial: '+33',  flag: '🇫🇷' },
+  { code: 'ES', name: 'Spain',                dial: '+34',  flag: '🇪🇸' },
+  { code: 'IT', name: 'Italy',                dial: '+39',  flag: '🇮🇹' },
+  { code: 'NL', name: 'Netherlands',          dial: '+31',  flag: '🇳🇱' },
+  { code: 'SE', name: 'Sweden',               dial: '+46',  flag: '🇸🇪' },
+  { code: 'NO', name: 'Norway',               dial: '+47',  flag: '🇳🇴' },
+  { code: 'DK', name: 'Denmark',              dial: '+45',  flag: '🇩🇰' },
+  { code: 'FI', name: 'Finland',              dial: '+358', flag: '🇫🇮' },
+  { code: 'IE', name: 'Ireland',              dial: '+353', flag: '🇮🇪' },
+  { code: 'PT', name: 'Portugal',             dial: '+351', flag: '🇵🇹' },
+  { code: 'CH', name: 'Switzerland',          dial: '+41',  flag: '🇨🇭' },
+  { code: 'AT', name: 'Austria',              dial: '+43',  flag: '🇦🇹' },
+  { code: 'BE', name: 'Belgium',              dial: '+32',  flag: '🇧🇪' },
+  { code: 'PL', name: 'Poland',               dial: '+48',  flag: '🇵🇱' },
+  { code: 'TR', name: 'Turkey',               dial: '+90',  flag: '🇹🇷' },
+  { code: 'GR', name: 'Greece',               dial: '+30',  flag: '🇬🇷' },
+  { code: 'AE', name: 'United Arab Emirates', dial: '+971', flag: '🇦🇪' },
+  { code: 'SA', name: 'Saudi Arabia',         dial: '+966', flag: '🇸🇦' },
+  { code: 'QA', name: 'Qatar',                dial: '+974', flag: '🇶🇦' },
+  { code: 'KW', name: 'Kuwait',               dial: '+965', flag: '🇰🇼' },
+  { code: 'BH', name: 'Bahrain',              dial: '+973', flag: '🇧🇭' },
+  { code: 'OM', name: 'Oman',                 dial: '+968', flag: '🇴🇲' },
+  { code: 'JO', name: 'Jordan',               dial: '+962', flag: '🇯🇴' },
+  { code: 'LB', name: 'Lebanon',              dial: '+961', flag: '🇱🇧' },
+  { code: 'EG', name: 'Egypt',                dial: '+20',  flag: '🇪🇬' },
+  { code: 'MA', name: 'Morocco',              dial: '+212', flag: '🇲🇦' },
+  { code: 'TN', name: 'Tunisia',              dial: '+216', flag: '🇹🇳' },
+  { code: 'DZ', name: 'Algeria',              dial: '+213', flag: '🇩🇿' },
+  { code: 'IL', name: 'Israel',               dial: '+972', flag: '🇮🇱' },
+  { code: 'IN', name: 'India',                dial: '+91',  flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistan',             dial: '+92',  flag: '🇵🇰' },
+  { code: 'BD', name: 'Bangladesh',           dial: '+880', flag: '🇧🇩' },
+  { code: 'CN', name: 'China',                dial: '+86',  flag: '🇨🇳' },
+  { code: 'JP', name: 'Japan',                dial: '+81',  flag: '🇯🇵' },
+  { code: 'KR', name: 'South Korea',          dial: '+82',  flag: '🇰🇷' },
+  { code: 'SG', name: 'Singapore',            dial: '+65',  flag: '🇸🇬' },
+  { code: 'MY', name: 'Malaysia',             dial: '+60',  flag: '🇲🇾' },
+  { code: 'ID', name: 'Indonesia',            dial: '+62',  flag: '🇮🇩' },
+  { code: 'TH', name: 'Thailand',             dial: '+66',  flag: '🇹🇭' },
+  { code: 'VN', name: 'Vietnam',              dial: '+84',  flag: '🇻🇳' },
+  { code: 'PH', name: 'Philippines',          dial: '+63',  flag: '🇵🇭' },
+  { code: 'NZ', name: 'New Zealand',          dial: '+64',  flag: '🇳🇿' },
+  { code: 'ZA', name: 'South Africa',         dial: '+27',  flag: '🇿🇦' },
+  { code: 'NG', name: 'Nigeria',              dial: '+234', flag: '🇳🇬' },
+  { code: 'KE', name: 'Kenya',                dial: '+254', flag: '🇰🇪' },
+  { code: 'GH', name: 'Ghana',                dial: '+233', flag: '🇬🇭' },
+  { code: 'BR', name: 'Brazil',               dial: '+55',  flag: '🇧🇷' },
+  { code: 'MX', name: 'Mexico',               dial: '+52',  flag: '🇲🇽' },
+  { code: 'AR', name: 'Argentina',            dial: '+54',  flag: '🇦🇷' },
+  { code: 'CL', name: 'Chile',                dial: '+56',  flag: '🇨🇱' },
+  { code: 'CO', name: 'Colombia',             dial: '+57',  flag: '🇨🇴' },
+  { code: 'PE', name: 'Peru',                 dial: '+51',  flag: '🇵🇪' },
+  { code: 'RU', name: 'Russia',               dial: '+7',   flag: '🇷🇺' },
+  { code: 'UA', name: 'Ukraine',              dial: '+380', flag: '🇺🇦' },
+];
+
+function CountryPicker({ t, value, onChange, onClose }) {
+  const [query, setQuery] = useState('');
+  const filtered = COUNTRIES.filter(c => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return c.name.toLowerCase().includes(q)
+        || c.dial.includes(q.replace(/^\+/, ''))
+        || c.code.toLowerCase().includes(q);
+  });
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 100,
+      background: t.bg,
+      display: 'flex', flexDirection: 'column',
+      animation: 'screenIn 180ms ease-out',
+    }}>
+      <div style={{
+        padding: '18px 20px 12px',
+        borderBottom: `1px solid ${t.border}`,
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 14,
+        }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Select country</div>
+          <div onClick={onClose} style={{
+            width: 34, height: 34, borderRadius: 100,
+            background: t.surface, border: `1px solid ${t.border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: t.textDim, cursor: 'pointer', fontSize: 16,
+          }}>×</div>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          background: t.surface, border: `1px solid ${t.border}`,
+          borderRadius: 12, padding: '0 12px',
+        }}>
+          <span style={{ color: t.textMute, marginRight: 8 }}>⌕</span>
+          <input value={query} onChange={e => setQuery(e.target.value)}
+            placeholder="Search country or code"
+            autoFocus
+            style={{
+              flex: 1, padding: '10px 0', background: 'transparent', border: 0,
+              outline: 'none', color: t.text, fontFamily: SANS, fontSize: 14,
+            }} />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflow: 'auto', padding: '4px 8px 20px' }}>
+        {filtered.length === 0 && (
+          <div style={{
+            padding: 24, textAlign: 'center',
+            color: t.textDim, fontSize: 13,
+          }}>No matches.</div>
+        )}
+        {filtered.map(c => {
+          const selected = c.code === value.code;
+          return (
+            <div key={c.code}
+              onClick={() => { onChange(c); onClose(); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px 14px', margin: '2px 4px', borderRadius: 12,
+                background: selected ? t.accentSoft : 'transparent',
+                cursor: 'pointer',
+              }}>
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{c.flag}</span>
+              <span style={{ flex: 1, fontSize: 15, fontWeight: selected ? 700 : 500 }}>{c.name}</span>
+              <span style={{
+                fontFamily: MONO, fontSize: 13,
+                color: selected ? t.accent : t.textDim, fontWeight: 600,
+              }}>{c.dial}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
+  const isSignup = mode === 'signup';
+  const [step, setStep] = useState('number'); // 'number' | 'otp'
+  const [country, setCountry] = useState(COUNTRIES[0]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [code, setCode]   = useState(['', '', '', '', '', '']);
+  const [err, setErr]     = useState(null);
+  const [resendIn, setResendIn] = useState(0);
+  const inputsRef = useRef([]);
+
+  useEffect(() => {
+    if (step !== 'otp' || resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn(s => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [step, resendIn]);
+
+  const sendCode = () => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length < 7) return setErr('Enter a valid phone number.');
+    setErr(null);
+    setStep('otp');
+    setResendIn(30);
+  };
+
+  const setDigit = (i, v) => {
+    const d = v.replace(/\D/g, '').slice(-1);
+    setCode(c => {
+      const next = [...c]; next[i] = d; return next;
+    });
+    if (d && i < 5) inputsRef.current[i + 1]?.focus();
+  };
+
+  const onKey = (i, e) => {
+    if (e.key === 'Backspace' && !code[i] && i > 0) {
+      inputsRef.current[i - 1]?.focus();
+    }
+  };
+
+  const verify = () => {
+    if (code.some(d => !d)) return setErr('Enter all 6 digits.');
+    setErr(null);
+    onSubmit({ phone });
+  };
+
+  return (
+    <Bg t={t} padTop={56} padBottom={40}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 24px', position: 'relative' }}>
+        <BackHeader t={t} onBack={step === 'otp' ? () => { setStep('number'); setErr(null); } : onBack} />
+
+        {step === 'number' ? (
+          <>
+            <h1 style={{
+              fontSize: 28, fontWeight: 700, lineHeight: 1.15,
+              margin: '8px 0 6px', letterSpacing: '-0.02em',
+            }}>
+              {isSignup ? 'Sign up with phone' : 'Log in with phone'}
+            </h1>
+            <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 24px' }}>
+              We'll text you a 6-digit code. Standard rates apply.
+            </p>
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{
+                fontFamily: MONO, fontSize: 11, color: t.textDim,
+                letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8,
+              }}>Phone number</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div onClick={() => setPickerOpen(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '0 14px', minWidth: 110,
+                  background: t.surface, border: `1px solid ${t.border}`,
+                  borderRadius: 14, cursor: 'pointer', userSelect: 'none',
+                }}>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{country.flag}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 600 }}>{country.dial}</span>
+                  <span style={{ marginLeft: 'auto', color: t.textMute, fontSize: 12 }}>▾</span>
+                </div>
+                <div style={{
+                  flex: 1, display: 'flex', alignItems: 'center',
+                  background: t.surface, border: `1px solid ${err ? t.danger : t.border}`,
+                  borderRadius: 14, padding: '0 14px',
+                }}>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                    placeholder="555 123 4567" autoFocus inputMode="tel"
+                    style={{
+                      flex: 1, padding: '14px 0', background: 'transparent', border: 0,
+                      outline: 'none', color: t.text, fontFamily: SANS, fontSize: 15,
+                    }} />
+                </div>
+              </div>
+              {err && <div style={{ marginTop: 6, color: t.danger, fontSize: 12 }}>{err}</div>}
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <PrimaryBtn t={t} onClick={sendCode} icon={<span>→</span>}>
+                Send code
+              </PrimaryBtn>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 style={{
+              fontSize: 28, fontWeight: 700, lineHeight: 1.15,
+              margin: '8px 0 6px', letterSpacing: '-0.02em',
+            }}>Enter the code</h1>
+            <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 28px' }}>
+              We sent a 6-digit code to <span style={{ color: t.text, fontWeight: 600 }}>{country.dial} {phone}</span>.
+            </p>
+
+            <div style={{
+              display: 'flex', gap: 8, justifyContent: 'space-between', marginBottom: 14,
+            }}>
+              {code.map((d, i) => (
+                <input key={i}
+                  ref={el => inputsRef.current[i] = el}
+                  value={d}
+                  onChange={e => setDigit(i, e.target.value)}
+                  onKeyDown={e => onKey(i, e)}
+                  inputMode="numeric"
+                  maxLength={1}
+                  autoFocus={i === 0}
+                  style={{
+                    width: 46, height: 56, textAlign: 'center',
+                    background: t.surface, border: `1px solid ${err ? t.danger : (d ? t.accent : t.border)}`,
+                    borderRadius: 14, color: t.text,
+                    fontFamily: MONO, fontWeight: 700, fontSize: 22,
+                    outline: 'none',
+                  }} />
+              ))}
+            </div>
+            {err && <div style={{ color: t.danger, fontSize: 12, marginBottom: 12 }}>{err}</div>}
+
+            <div style={{
+              fontSize: 13, color: t.textDim, marginBottom: 18,
+            }}>
+              Didn't get it?{' '}
+              {resendIn > 0
+                ? <span style={{ color: t.textMute, fontFamily: MONO }}>Resend in {resendIn}s</span>
+                : <span onClick={() => setResendIn(30)} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>Resend code</span>}
+            </div>
+
+            <PrimaryBtn t={t} onClick={verify} icon={<span>→</span>}>
+              {isSignup ? 'Create account' : 'Log in'}
+            </PrimaryBtn>
+          </>
+        )}
+      </div>
+      {pickerOpen && (
+        <CountryPicker t={t} value={country}
+          onChange={setCountry}
+          onClose={() => setPickerOpen(false)} />
+      )}
     </Bg>
   );
 }
@@ -2033,8 +2569,9 @@ function App() {
   const t = dark ? TOKENS.dark : TOKENS.light;
 
   // navigation: which top-level screen + history stack for back button
-  const [screen, setScreen] = useState('onboarding'); // onboarding | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile
+  const [screen, setScreen] = useState('onboarding'); // onboarding | auth | authEmail | authPhone | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile | settings
   const [history, setHistory] = useState([]);
+  const [authMode, setAuthMode] = useState('signup'); // 'signup' | 'login'
 
   const navigate = useCallback((next, opts = {}) => {
     setHistory(h => opts.replace ? h : [...h, screen]);
@@ -2285,7 +2822,33 @@ function App() {
 
   let body;
   if (screen === 'onboarding') {
-    body = <ScreenOnboarding t={t} dark={dark} onStart={() => navigate('home', { replace: true })} />;
+    body = <ScreenOnboarding t={t} dark={dark} onStart={(m) => {
+      setAuthMode(m || 'signup');
+      navigate('auth');
+    }} />;
+  } else if (screen === 'auth') {
+    body = <ScreenAuth t={t} dark={dark}
+      mode={authMode}
+      setMode={setAuthMode}
+      onBack={ob}
+      onPick={(provider) => {
+        if (provider === 'email') navigate('authEmail');
+        else if (provider === 'phone') navigate('authPhone');
+        else navigate('home', { replace: true }); // apple / google → mock success
+      }}
+    />;
+  } else if (screen === 'authEmail') {
+    body = <ScreenAuthEmail t={t} dark={dark}
+      mode={authMode}
+      onBack={ob}
+      onSubmit={() => navigate('home', { replace: true })}
+    />;
+  } else if (screen === 'authPhone') {
+    body = <ScreenAuthPhone t={t} dark={dark}
+      mode={authMode}
+      onBack={ob}
+      onSubmit={() => navigate('home', { replace: true })}
+    />;
   } else if (screen === 'home') {
     body = <ScreenHome t={t} dark={dark} store={store}
       onBack={ob}
