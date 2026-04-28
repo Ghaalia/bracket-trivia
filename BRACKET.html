@@ -453,11 +453,28 @@ function BackHeader({ t, onBack, onMore }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      marginBottom: 12,
+      marginBottom: 12, minHeight: 38,
     }}>
-      {btn('←', onBack)}
-      {btn('⋯', onMore)}
+      {onBack ? btn('←', onBack) : <div style={{ width: 38, height: 38 }} />}
+      {onMore ? btn('⋯', onMore) : <div style={{ width: 38, height: 38 }} />}
     </div>
+  );
+}
+
+// Floating back chip — used on screens without a BackHeader
+function BackChip({ t, onBack }) {
+  if (!onBack) return null;
+  return (
+    <div onClick={onBack} style={{
+      position: 'absolute', top: 14, left: 16, zIndex: 10,
+      width: 38, height: 38, borderRadius: 100,
+      background: t.surface, border: `1px solid ${t.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: 16, color: t.textDim, cursor: 'pointer',
+      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+      userSelect: 'none',
+    }}>←</div>
   );
 }
 
@@ -592,7 +609,7 @@ function Stat({ t, label, value }) {
   );
 }
 
-function ScreenHome({ t, dark, store, onPickMode, onNav, onToggleTheme }) {
+function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }) {
   const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
   const rank = '#142';
   const days = ['M','T','W','T','F','S','S'];
@@ -600,6 +617,7 @@ function ScreenHome({ t, dark, store, onPickMode, onNav, onToggleTheme }) {
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1173,7 +1191,7 @@ function BigChoice({ t, label, sub, tone, selected, correct, wrong, onClick, loc
 function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
                               yourScore, oppScore, oppName,
                               selected, revealed, correctIdx, oppPickIdx, secLeft,
-                              onPick }) {
+                              onBack, onPick }) {
   const cat = CATEGORIES.find(c => c.id === category);
   const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
 
@@ -1183,6 +1201,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
     return (
       <Bg t={t} padTop={56}>
         <Orbs dark={dark} />
+        <BackChip t={t} onBack={onBack} />
         <div style={{ padding: '0 20px', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
@@ -1244,8 +1263,9 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
           <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
           <Pill t={t} tone="accent">⚡ head-to-head</Pill>
         </div>
@@ -1332,7 +1352,7 @@ const SOLO_FACTS = {
 };
 
 function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
-                              selected, revealed, correctIdx, onPick, onNext }) {
+                              selected, revealed, correctIdx, onBack, onPick, onNext }) {
   const cat = CATEGORIES.find(c => c.id === category);
   const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
 
@@ -1342,8 +1362,9 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
     return (
       <Bg t={t} padTop={56}>
         <Orbs dark={dark} />
+        <BackChip t={t} onBack={onBack} />
         <div style={{ padding: '0 20px', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
             <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
             <Pill t={t}>🧠 solo · no timer</Pill>
           </div>
@@ -1407,8 +1428,9 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
           <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
           <Pill t={t}>🧠 solo · no timer</Pill>
         </div>
@@ -1480,7 +1502,7 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
 }
 
 // ───────────────────────── 9. RESULTS ─────────────────────────
-function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, total, avgTime, streak, onRematch, onHome }) {
+function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, total, avgTime, streak, onBack, onRematch, onHome }) {
   const won = mode === 'team' ? yourScore > oppScore : (correct >= Math.ceil(total/2));
   const tied = mode === 'team' && yourScore === oppScore;
   const margin = Math.abs(yourScore - oppScore);
@@ -1494,6 +1516,7 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative', textAlign: 'center' }}>
         <div style={{
           fontFamily: MONO, fontSize: 11, color: t.textDim,
@@ -1648,7 +1671,7 @@ function RankRow({ t, rank, name, score, you }) {
   );
 }
 
-function ScreenLeaderboard({ t, dark, store, onNav }) {
+function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
   const [tab, setTab] = useState('friends');
   const top = [
     { rank: 2, name: 'Yousef',   score: 9420,  avatar: '#FF6B6B' },
@@ -1665,8 +1688,9 @@ function ScreenLeaderboard({ t, dark, store, onNav }) {
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Leaderboard</h1>
           <div style={{
             padding: '6px 4px', borderRadius: 100,
@@ -1707,13 +1731,14 @@ function ScreenLeaderboard({ t, dark, store, onNav }) {
 }
 
 // ───────────────────────── 11. PROFILE ─────────────────────────
-function ScreenProfile({ t, dark, store, onNav, onToggleTheme }) {
+function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
   const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
+      <BackChip t={t} onBack={onBack} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 46 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Profile</h1>
           <div onClick={onToggleTheme} style={{
             width: 38, height: 38, borderRadius: 100,
@@ -1847,8 +1872,25 @@ function App() {
   const dark = store.darkMode;
   const t = dark ? TOKENS.dark : TOKENS.light;
 
-  // navigation: which top-level screen
+  // navigation: which top-level screen + history stack for back button
   const [screen, setScreen] = useState('onboarding'); // onboarding | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile
+  const [history, setHistory] = useState([]);
+
+  const navigate = useCallback((next, opts = {}) => {
+    setHistory(h => opts.replace ? h : [...h, screen]);
+    setScreen(next);
+  }, [screen]);
+
+  const back = useCallback(() => {
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = h[h.length - 1];
+      setScreen(prev);
+      return h.slice(0, -1);
+    });
+  }, []);
+
+  const canBack = history.length > 0;
 
   // match config
   const [mode, setMode] = useState('team'); // 'solo' | 'team'
@@ -2021,7 +2063,7 @@ function App() {
         mastery: nextMastery,
       };
     });
-    setScreen('results');
+    navigate('results');
   };
 
   // ─── flow handlers ─────────────────────────────
@@ -2033,20 +2075,20 @@ function App() {
     setYourTimes([]); setYourCorrect(0);
     setSelected(null); setRevealed(false); setOppPickIdx(null);
     setSecLeft(TIMER_SECONDS);
-    setScreen('question');
+    navigate('question');
   };
 
   const onPickMode = (m) => {
     setMode(m);
     setCategory(null);
-    setScreen('categories');
+    navigate('categories');
   };
 
   const onNav = (id) => {
-    if (id === 'home')  setScreen('home');
-    if (id === 'play')  { setMode('team'); setCategory(null); setScreen('categories'); }
-    if (id === 'board') setScreen('leaderboard');
-    if (id === 'me')    setScreen('profile');
+    if (id === 'home')  navigate('home');
+    if (id === 'play')  { setMode('team'); setCategory(null); navigate('categories'); }
+    if (id === 'board') navigate('leaderboard');
+    if (id === 'me')    navigate('profile');
   };
 
   // cleanup timers on screen change
@@ -2059,11 +2101,15 @@ function App() {
   const q = questions[qIdx];
   const avgTime = yourTimes.length ? yourTimes.reduce((a,b)=>a+b,0)/yourTimes.length : 0;
 
+  // helper: only expose onBack when there's history
+  const ob = canBack ? back : undefined;
+
   let body;
   if (screen === 'onboarding') {
-    body = <ScreenOnboarding t={t} dark={dark} onStart={() => setScreen('home')} />;
+    body = <ScreenOnboarding t={t} dark={dark} onStart={() => navigate('home', { replace: true })} />;
   } else if (screen === 'home') {
     body = <ScreenHome t={t} dark={dark} store={store}
+      onBack={ob}
       onPickMode={onPickMode}
       onNav={onNav}
       onToggleTheme={toggleTheme}
@@ -2071,32 +2117,32 @@ function App() {
   } else if (screen === 'categories') {
     body = <ScreenCategories t={t} dark={dark}
       selected={category}
-      onPick={(id, advance) => { setCategory(id); if (advance) setScreen('difficulty'); }}
-      onBack={() => setScreen('home')}
-      onRandom={() => { setCategory(null); setScreen('difficulty'); }}
+      onPick={(id, advance) => { setCategory(id); if (advance) navigate('difficulty'); }}
+      onBack={ob}
+      onRandom={() => { setCategory(null); navigate('difficulty'); }}
     />;
   } else if (screen === 'difficulty') {
     body = <ScreenDifficulty t={t} dark={dark}
       selected={difficulty}
       onPick={setDifficulty}
-      onBack={() => setScreen('categories')}
+      onBack={ob}
       onContinue={() => {
         if (mode === 'solo') startMatch();
-        else setScreen('invite');
+        else navigate('invite');
       }}
     />;
   } else if (screen === 'invite') {
     body = <ScreenInvite t={t} dark={dark}
-      onBack={() => setScreen('difficulty')}
+      onBack={ob}
       onCreate={(name) => {
         if (name) setOpponentName(name);
         setRoomCode(genRoomCode());
-        setScreen('lobby');
+        navigate('lobby');
       }}
       onJoin={(code) => {
         setRoomCode(code);
         setOpponentName('Omar');
-        setScreen('lobby');
+        navigate('lobby');
       }}
     />;
   } else if (screen === 'lobby') {
@@ -2105,7 +2151,7 @@ function App() {
       opponentName={opponentName}
       category={category}
       difficulty={difficulty}
-      onBack={() => setScreen('invite')}
+      onBack={ob}
       onStart={startMatch}
     />;
   } else if (screen === 'question' && q) {
@@ -2124,6 +2170,7 @@ function App() {
         correctIdx={q.a}
         oppPickIdx={oppPickIdx}
         secLeft={secLeft}
+        onBack={ob}
         onPick={pickTeam}
       />;
     } else {
@@ -2136,6 +2183,7 @@ function App() {
         selected={selected}
         revealed={revealed}
         correctIdx={q.a}
+        onBack={ob}
         onPick={pickSolo}
         onNext={advanceSolo}
       />;
@@ -2150,15 +2198,16 @@ function App() {
       total={questions.length || QUESTIONS_PER_MATCH}
       avgTime={avgTime}
       streak={store.streak}
+      onBack={ob}
       onRematch={startMatch}
-      onHome={() => setScreen('home')}
+      onHome={() => navigate('home')}
     />;
   } else if (screen === 'leaderboard') {
-    body = <ScreenLeaderboard t={t} dark={dark} store={store} onNav={onNav} />;
+    body = <ScreenLeaderboard t={t} dark={dark} store={store} onBack={ob} onNav={onNav} />;
   } else if (screen === 'profile') {
-    body = <ScreenProfile t={t} dark={dark} store={store} onNav={onNav} onToggleTheme={toggleTheme} />;
+    body = <ScreenProfile t={t} dark={dark} store={store} onBack={ob} onNav={onNav} onToggleTheme={toggleTheme} />;
   } else {
-    body = <ScreenHome t={t} dark={dark} store={store} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
+    body = <ScreenHome t={t} dark={dark} store={store} onBack={ob} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
   }
 
   return (
