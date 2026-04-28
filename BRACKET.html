@@ -296,6 +296,7 @@ function useStore() {
       bestScore: s.bestScore ?? 4380,
       mastery: s.mastery ?? { movies: 78, landmarks: 64, music: 51, history: 32, sports: 18, science: 22 },
       darkMode: s.darkMode ?? true,
+      notifications: s.notifications ?? false,
     };
   });
   const update = useCallback((patch) => {
@@ -480,10 +481,10 @@ function BackChip({ t, onBack }) {
 
 function BottomNav({ t, active, onNav }) {
   const items = [
-    { id: 'home',  label: 'Home',  icon: '◇' },
-    { id: 'play',  label: 'Play',  icon: '▶' },
-    { id: 'board', label: 'Board', icon: '◷' },
-    { id: 'me',    label: 'Me',    icon: '◉' },
+    { id: 'home',     label: 'Home',     icon: '◇' },
+    { id: 'board',    label: 'Board',    icon: '◷' },
+    { id: 'me',       label: 'Me',       icon: '◉' },
+    { id: 'settings', label: 'Settings', icon: '⚙' },
   ];
   return (
     <div style={{
@@ -1742,12 +1743,12 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
         <BackHeader t={t} onBack={onBack} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Profile</h1>
-          <div onClick={onToggleTheme} style={{
+          <div onClick={onToggleTheme} title={dark ? 'Switch to light' : 'Switch to dark'} style={{
             width: 38, height: 38, borderRadius: 100,
             background: t.surface, border: `1px solid ${t.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 16, cursor: 'pointer',
-          }}>⚙</div>
+            fontSize: 18, cursor: 'pointer', color: t.textDim,
+          }}>{dark ? '☼' : '☾'}</div>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 22 }}>
@@ -1830,6 +1831,167 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
         </div>
       </div>
       <BottomNav t={t} active="me" onNav={onNav} />
+    </Bg>
+  );
+}
+
+// ───────────────────────── 12. SETTINGS ─────────────────────────
+function SettingsRow({ t, label, sub, right, onClick, last, danger }) {
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '14px 16px',
+      borderBottom: last ? 'none' : `1px solid ${t.border}`,
+      cursor: onClick ? 'pointer' : 'default',
+    }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: danger ? t.danger : t.text }}>{label}</div>
+        {sub && <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO, marginTop: 2 }}>{sub}</div>}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+function Toggle({ t, on, onChange }) {
+  return (
+    <div onClick={() => onChange(!on)} style={{
+      width: 46, height: 28, borderRadius: 100,
+      background: on ? t.accent : t.border,
+      position: 'relative', cursor: 'pointer',
+      transition: 'background 200ms',
+      boxShadow: on ? `0 0 12px ${t.accent}66` : 'none',
+    }}>
+      <div style={{
+        position: 'absolute', top: 2, left: on ? 20 : 2,
+        width: 24, height: 24, borderRadius: 100,
+        background: '#fff',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+        transition: 'left 200ms',
+      }} />
+    </div>
+  );
+}
+
+function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggleNotifications, onLogout, onDeleteAccount }) {
+  const [confirmDel, setConfirmDel] = useState(false);
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{ padding: '0 20px', position: 'relative' }}>
+        <BackHeader t={t} onBack={onBack} />
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Settings</h1>
+        <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>Tweak your experience.</p>
+
+        {/* Theme */}
+        <div style={{ marginTop: 22 }}>
+          <SectionTitle t={t}>Appearance</SectionTitle>
+        </div>
+        <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
+          <SettingsRow t={t}
+            label="Theme"
+            sub={dark ? 'Dark mode' : 'Light mode'}
+            last
+            right={
+              <div style={{
+                display: 'flex', padding: 3, borderRadius: 100,
+                background: t.surfaceStrong, border: `1px solid ${t.border}`,
+              }}>
+                {[
+                  { id: 'light', icon: '☾', label: 'Light' },
+                  { id: 'dark',  icon: '☼', label: 'Dark' },
+                ].map(opt => {
+                  const active = (opt.id === 'dark') === dark;
+                  return (
+                    <div key={opt.id} onClick={() => { if (!active) onToggleTheme(); }} style={{
+                      padding: '6px 12px', borderRadius: 100,
+                      background: active ? t.accent : 'transparent',
+                      color: active ? '#fff' : t.textDim,
+                      fontSize: 12, fontFamily: MONO, fontWeight: 700,
+                      letterSpacing: '0.05em', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span style={{ fontSize: 14 }}>{opt.icon}</span>
+                      {opt.label.toUpperCase()}
+                    </div>
+                  );
+                })}
+              </div>
+            }
+          />
+        </Card>
+
+        {/* Notifications */}
+        <div style={{ marginTop: 22 }}>
+          <SectionTitle t={t}>Notifications</SectionTitle>
+        </div>
+        <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
+          <SettingsRow t={t}
+            label="Push notifications"
+            sub={store.notifications ? 'Streak reminders + match invites' : 'Off — you won’t be pinged'}
+            last
+            right={<Toggle t={t} on={!!store.notifications} onChange={onToggleNotifications} />}
+          />
+        </Card>
+
+        {/* Account */}
+        <div style={{ marginTop: 22 }}>
+          <SectionTitle t={t}>Account</SectionTitle>
+        </div>
+        <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
+          <SettingsRow t={t}
+            label="Logout"
+            sub="Sign out of this device"
+            onClick={onLogout}
+            right={<span style={{ color: t.textDim, fontSize: 18 }}>↪</span>}
+          />
+          <SettingsRow t={t}
+            label="Delete account"
+            sub="Erase your data and progress"
+            danger
+            last
+            onClick={() => setConfirmDel(true)}
+            right={<span style={{ color: t.danger, fontSize: 18 }}>✕</span>}
+          />
+        </Card>
+
+        <div style={{
+          marginTop: 22, fontFamily: MONO, fontSize: 10,
+          color: t.textMute, textAlign: 'center', letterSpacing: '0.15em',
+        }}>
+          {'</>'} BRACKET v1.0.0 {'</>'}
+        </div>
+      </div>
+
+      {confirmDel && (
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 100,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24,
+        }}>
+          <Card t={t} style={{
+            background: dark ? '#0F1B36' : '#fff', padding: 22, maxWidth: 340,
+            border: `1px solid ${t.border}`,
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Delete account?</div>
+            <div style={{ fontSize: 14, color: t.textDim, marginBottom: 18 }}>
+              This wipes your streak, stats and mastery. Can't be undone.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <GhostBtn t={t} full onClick={() => setConfirmDel(false)}>Cancel</GhostBtn>
+              <button onClick={() => { setConfirmDel(false); onDeleteAccount(); }} style={{
+                flex: 1, padding: '14px 18px', borderRadius: 16,
+                background: t.danger, color: '#fff', border: 0, cursor: 'pointer',
+                fontFamily: SANS, fontWeight: 600, fontSize: 15,
+              }}>Delete</button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      <BottomNav t={t} active="settings" onNav={onNav} />
     </Bg>
   );
 }
@@ -2087,10 +2249,29 @@ function App() {
   };
 
   const onNav = (id) => {
-    if (id === 'home')  navigate('home');
-    if (id === 'play')  { setMode('team'); setCategory(null); navigate('categories'); }
-    if (id === 'board') navigate('leaderboard');
-    if (id === 'me')    navigate('profile');
+    if (id === 'home')     navigate('home');
+    if (id === 'board')    navigate('leaderboard');
+    if (id === 'me')       navigate('profile');
+    if (id === 'settings') navigate('settings');
+  };
+
+  const onToggleNotifications = (v) => updateStore({ notifications: v });
+
+  const onLogout = () => {
+    setHistory([]);
+    setScreen('onboarding');
+  };
+
+  const onDeleteAccount = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    updateStore({
+      streak: 0, lastPlayed: null, wins: 0, played: 0,
+      correctTotal: 0, totalAnswered: 0, bestScore: 0,
+      mastery: { movies: 0, history: 0, landmarks: 0, sports: 0, music: 0, science: 0 },
+      notifications: false,
+    });
+    setHistory([]);
+    setScreen('onboarding');
   };
 
   // cleanup timers on screen change
@@ -2208,6 +2389,15 @@ function App() {
     body = <ScreenLeaderboard t={t} dark={dark} store={store} onBack={ob} onNav={onNav} />;
   } else if (screen === 'profile') {
     body = <ScreenProfile t={t} dark={dark} store={store} onBack={ob} onNav={onNav} onToggleTheme={toggleTheme} />;
+  } else if (screen === 'settings') {
+    body = <ScreenSettings t={t} dark={dark} store={store}
+      onBack={ob}
+      onNav={onNav}
+      onToggleTheme={toggleTheme}
+      onToggleNotifications={onToggleNotifications}
+      onLogout={onLogout}
+      onDeleteAccount={onDeleteAccount}
+    />;
   } else {
     body = <ScreenHome t={t} dark={dark} store={store} onBack={ob} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
   }
