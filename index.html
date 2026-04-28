@@ -125,147 +125,406 @@ function shade(hex, amt) {
 
 // ───────────────────────── Categories ─────────────────────────
 const CATEGORIES = [
-  { id: 'movies',    label: 'Movies',    emoji: '🎬', count: 412, hue: '#FF6B6B' },
-  { id: 'history',   label: 'History',   emoji: '🏛️', count: 308, hue: '#FFB454' },
-  { id: 'landmarks', label: 'Landmarks', emoji: '🗺️', count: 254, hue: '#4ADE80' },
-  { id: 'sports',    label: 'Sports',    emoji: '⚽', count: 199, hue: '#4D7BFF' },
-  { id: 'music',     label: 'Music',     emoji: '🎵', count: 286, hue: '#C77DFF' },
-  { id: 'science',   label: 'Science',   emoji: '🧪', count: 221, hue: '#00C2D1' },
+  { id: 'movies',    label: 'Movies',    label_ar: 'أفلام',  emoji: '🎬', count: 412, hue: '#FF6B6B' },
+  { id: 'history',   label: 'History',   label_ar: 'تاريخ',  emoji: '🏛️', count: 308, hue: '#FFB454' },
+  { id: 'landmarks', label: 'Landmarks', label_ar: 'معالم',  emoji: '🗺️', count: 254, hue: '#4ADE80' },
+  { id: 'sports',    label: 'Sports',    label_ar: 'رياضة',  emoji: '⚽', count: 199, hue: '#4D7BFF' },
+  { id: 'music',     label: 'Music',     label_ar: 'موسيقى', emoji: '🎵', count: 286, hue: '#C77DFF' },
+  { id: 'science',   label: 'Science',   label_ar: 'علوم',   emoji: '🧪', count: 221, hue: '#00C2D1' },
 ];
+const catLabel = (c, lang) => c ? (lang === 'ar' ? c.label_ar : c.label) : '';
 
 // ───────────────────────── Question bank ─────────────────────────
 // type: 'mc' multiple choice | 'tf' true/false. answer = index of correct option (or 0/1 for tf where 0=true,1=false)
 const QUESTIONS = {
   movies: {
     easy: [
-      { type: 'mc', q: 'Which animated film features a snowman named Olaf?', opts: ['Frozen', 'Tangled', 'Moana', 'Brave'], a: 0 },
-      { type: 'tf', q: 'The Lion King (1994) was released by Disney.', a: 0 },
-      { type: 'mc', q: 'Who plays Iron Man in the Marvel films?', opts: ['Chris Evans', 'Robert Downey Jr.', 'Mark Ruffalo', 'Chris Hemsworth'], a: 1 },
-      { type: 'mc', q: 'What color is the main character in Shrek?', opts: ['Blue', 'Red', 'Green', 'Yellow'], a: 2 },
+      { type: 'mc', q: 'Which animated film features a snowman named Olaf?', q_ar: 'في أي فيلم رسوم متحركة يظهر رجل الثلج أولاف؟', opts: ['Frozen', 'Tangled', 'Moana', 'Brave'], opts_ar: ['فروزن', 'تانجلد', 'موانا', 'بريف'], a: 0 },
+      { type: 'tf', q: 'The Lion King (1994) was released by Disney.', q_ar: 'فيلم الأسد الملك (1994) من إنتاج ديزني.', a: 0 },
+      { type: 'mc', q: 'Who plays Iron Man in the Marvel films?', q_ar: 'من يؤدي دور آيرون مان في أفلام مارفل؟', opts: ['Chris Evans', 'Robert Downey Jr.', 'Mark Ruffalo', 'Chris Hemsworth'], opts_ar: ['كريس إيفانز', 'روبرت داوني الابن', 'مارك روفالو', 'كريس هيمسوورث'], a: 1 },
+      { type: 'mc', q: 'What color is the main character in Shrek?', q_ar: 'ما لون الشخصية الرئيسية في فيلم شريك؟', opts: ['Blue', 'Red', 'Green', 'Yellow'], opts_ar: ['أزرق', 'أحمر', 'أخضر', 'أصفر'], a: 2 },
     ],
     mid: [
-      { type: 'mc', q: 'Who directed the 2021 sci-fi epic "Dune: Part One"?', opts: ['Christopher Nolan', 'Denis Villeneuve', 'Greta Gerwig', 'Bong Joon-ho'], a: 1 },
-      { type: 'mc', q: 'Which film won Best Picture at the 2020 Oscars?', opts: ['1917', 'Joker', 'Parasite', 'Once Upon a Time in Hollywood'], a: 2 },
-      { type: 'tf', q: 'The Godfather Part II won Best Picture.', a: 0 },
-      { type: 'mc', q: 'Who composed the soundtrack for "The Lord of the Rings"?', opts: ['Hans Zimmer', 'John Williams', 'Howard Shore', 'Danny Elfman'], a: 2 },
+      { type: 'mc', q: 'Who directed the 2021 sci-fi epic "Dune: Part One"?', q_ar: 'من أخرج فيلم الخيال العلمي "ديون: الجزء الأول" (2021)؟', opts: ['Christopher Nolan', 'Denis Villeneuve', 'Greta Gerwig', 'Bong Joon-ho'], opts_ar: ['كريستوفر نولان', 'دينيس فيلنوف', 'جريتا جيرويغ', 'بونغ جون-هو'], a: 1 },
+      { type: 'mc', q: 'Which film won Best Picture at the 2020 Oscars?', q_ar: 'أي فيلم فاز بجائزة أفضل فيلم في أوسكار 2020؟', opts: ['1917', 'Joker', 'Parasite', 'Once Upon a Time in Hollywood'], opts_ar: ['1917', 'جوكر', 'باراسايت', 'ذات مرة في هوليوود'], a: 2 },
+      { type: 'tf', q: 'The Godfather Part II won Best Picture.', q_ar: 'فيلم العراب الجزء الثاني فاز بجائزة أفضل فيلم.', a: 0 },
+      { type: 'mc', q: 'Who composed the soundtrack for "The Lord of the Rings"?', q_ar: 'من ألف الموسيقى التصويرية لفيلم "سيد الخواتم"؟', opts: ['Hans Zimmer', 'John Williams', 'Howard Shore', 'Danny Elfman'], opts_ar: ['هانز زيمر', 'جون ويليامز', 'هاوارد شور', 'داني إلفمان'], a: 2 },
     ],
     hard: [
-      { type: 'mc', q: 'Which year was "Citizen Kane" released?', opts: ['1939', '1941', '1945', '1950'], a: 1 },
-      { type: 'mc', q: 'Who directed "In the Mood for Love" (2000)?', opts: ['Wong Kar-wai', 'Park Chan-wook', 'Ang Lee', 'Hou Hsiao-hsien'], a: 0 },
-      { type: 'tf', q: 'Stanley Kubrick directed "A Clockwork Orange" and "2001: A Space Odyssey".', a: 0 },
-      { type: 'mc', q: 'What is the highest-grossing film not in English?', opts: ['Parasite', 'The Wandering Earth II', 'Ne Zha 2', 'Hero'], a: 2 },
+      { type: 'mc', q: 'Which year was "Citizen Kane" released?', q_ar: 'في أي عام صدر فيلم "المواطن كين"؟', opts: ['1939', '1941', '1945', '1950'], opts_ar: ['1939', '1941', '1945', '1950'], a: 1 },
+      { type: 'mc', q: 'Who directed "In the Mood for Love" (2000)?', q_ar: 'من أخرج فيلم "في مزاج للحب" (2000)؟', opts: ['Wong Kar-wai', 'Park Chan-wook', 'Ang Lee', 'Hou Hsiao-hsien'], opts_ar: ['ونغ كار-واي', 'بارك تشان-ووك', 'آنغ لي', 'هو هسياو-هسين'], a: 0 },
+      { type: 'tf', q: 'Stanley Kubrick directed "A Clockwork Orange" and "2001: A Space Odyssey".', q_ar: 'ستانلي كوبريك أخرج فيلمي "البرتقالة الآلية" و"2001: ملحمة الفضاء".', a: 0 },
+      { type: 'mc', q: 'What is the highest-grossing film not in English?', q_ar: 'ما هو الفيلم الأعلى دخلاً غير الناطق بالإنجليزية؟', opts: ['Parasite', 'The Wandering Earth II', 'Ne Zha 2', 'Hero'], opts_ar: ['باراسايت', 'الأرض التائهة 2', 'ني تشا 2', 'البطل'], a: 2 },
     ],
   },
   history: {
     easy: [
-      { type: 'mc', q: 'Who was the first President of the United States?', opts: ['Thomas Jefferson', 'John Adams', 'George Washington', 'Abraham Lincoln'], a: 2 },
-      { type: 'tf', q: 'The Berlin Wall fell in 1989.', a: 0 },
-      { type: 'mc', q: 'In which country did the ancient Olympic Games begin?', opts: ['Italy', 'Greece', 'Egypt', 'Turkey'], a: 1 },
-      { type: 'mc', q: 'Which empire built the Colosseum?', opts: ['Greek', 'Ottoman', 'Roman', 'Persian'], a: 2 },
+      { type: 'mc', q: 'Who was the first President of the United States?', q_ar: 'من كان أول رئيس للولايات المتحدة الأمريكية؟', opts: ['Thomas Jefferson', 'John Adams', 'George Washington', 'Abraham Lincoln'], opts_ar: ['توماس جيفرسون', 'جون آدامز', 'جورج واشنطن', 'أبراهام لينكولن'], a: 2 },
+      { type: 'tf', q: 'The Berlin Wall fell in 1989.', q_ar: 'سقط جدار برلين عام 1989.', a: 0 },
+      { type: 'mc', q: 'In which country did the ancient Olympic Games begin?', q_ar: 'في أي بلد بدأت الألعاب الأولمبية القديمة؟', opts: ['Italy', 'Greece', 'Egypt', 'Turkey'], opts_ar: ['إيطاليا', 'اليونان', 'مصر', 'تركيا'], a: 1 },
+      { type: 'mc', q: 'Which empire built the Colosseum?', q_ar: 'أي إمبراطورية بنت الكولوسيوم؟', opts: ['Greek', 'Ottoman', 'Roman', 'Persian'], opts_ar: ['اليونانية', 'العثمانية', 'الرومانية', 'الفارسية'], a: 2 },
     ],
     mid: [
-      { type: 'mc', q: 'In what year did World War II end?', opts: ['1942', '1944', '1945', '1947'], a: 2 },
-      { type: 'tf', q: 'The Magna Carta was signed in 1215.', a: 0 },
-      { type: 'mc', q: 'Who was the first woman to win a Nobel Prize?', opts: ['Marie Curie', 'Rosalind Franklin', 'Ada Lovelace', 'Dorothy Hodgkin'], a: 0 },
-      { type: 'mc', q: 'The French Revolution began in which year?', opts: ['1776', '1789', '1804', '1815'], a: 1 },
+      { type: 'mc', q: 'In what year did World War II end?', q_ar: 'في أي عام انتهت الحرب العالمية الثانية؟', opts: ['1942', '1944', '1945', '1947'], opts_ar: ['1942', '1944', '1945', '1947'], a: 2 },
+      { type: 'tf', q: 'The Magna Carta was signed in 1215.', q_ar: 'وُقعت الماغنا كارتا عام 1215.', a: 0 },
+      { type: 'mc', q: 'Who was the first woman to win a Nobel Prize?', q_ar: 'من هي أول امرأة فازت بجائزة نوبل؟', opts: ['Marie Curie', 'Rosalind Franklin', 'Ada Lovelace', 'Dorothy Hodgkin'], opts_ar: ['ماري كوري', 'روزاليند فرانكلين', 'آدا لوفلايس', 'دوروثي هودجكين'], a: 0 },
+      { type: 'mc', q: 'The French Revolution began in which year?', q_ar: 'في أي عام بدأت الثورة الفرنسية؟', opts: ['1776', '1789', '1804', '1815'], opts_ar: ['1776', '1789', '1804', '1815'], a: 1 },
     ],
     hard: [
-      { type: 'mc', q: 'Which Roman emperor built a wall across northern Britain?', opts: ['Trajan', 'Hadrian', 'Augustus', 'Nero'], a: 1 },
-      { type: 'tf', q: 'The Treaty of Westphalia was signed in 1648.', a: 0 },
-      { type: 'mc', q: 'Who founded the Mongol Empire?', opts: ['Kublai Khan', 'Tamerlane', 'Genghis Khan', 'Ögedei Khan'], a: 2 },
-      { type: 'mc', q: 'The Battle of Hastings took place in:', opts: ['1066', '1099', '1215', '1314'], a: 0 },
+      { type: 'mc', q: 'Which Roman emperor built a wall across northern Britain?', q_ar: 'أي إمبراطور روماني بنى جداراً عبر شمال بريطانيا؟', opts: ['Trajan', 'Hadrian', 'Augustus', 'Nero'], opts_ar: ['تراجان', 'هادريان', 'أغسطس', 'نيرون'], a: 1 },
+      { type: 'tf', q: 'The Treaty of Westphalia was signed in 1648.', q_ar: 'وُقعت معاهدة وستفاليا عام 1648.', a: 0 },
+      { type: 'mc', q: 'Who founded the Mongol Empire?', q_ar: 'من أسس إمبراطورية المغول؟', opts: ['Kublai Khan', 'Tamerlane', 'Genghis Khan', 'Ögedei Khan'], opts_ar: ['قوبلاي خان', 'تيمورلنك', 'جنكيز خان', 'أوغطاي خان'], a: 2 },
+      { type: 'mc', q: 'The Battle of Hastings took place in:', q_ar: 'وقعت معركة هاستينغز في:', opts: ['1066', '1099', '1215', '1314'], opts_ar: ['1066', '1099', '1215', '1314'], a: 0 },
     ],
   },
   landmarks: {
     easy: [
-      { type: 'mc', q: 'In which city is the Eiffel Tower?', opts: ['London', 'Rome', 'Paris', 'Madrid'], a: 2 },
-      { type: 'tf', q: 'The Statue of Liberty was a gift from France to the United States.', a: 0 },
-      { type: 'mc', q: 'This iconic 30-meter statue stands above Rio de Janeiro. What is it?', opts: ['Eiffel Tower', 'Statue of Liberty', 'Christ the Redeemer', 'Big Ben'], a: 2 },
-      { type: 'mc', q: 'Where is the Great Pyramid of Giza?', opts: ['Mexico', 'Egypt', 'Peru', 'Sudan'], a: 1 },
+      { type: 'mc', q: 'In which city is the Eiffel Tower?', q_ar: 'في أي مدينة يقع برج إيفل؟', opts: ['London', 'Rome', 'Paris', 'Madrid'], opts_ar: ['لندن', 'روما', 'باريس', 'مدريد'], a: 2 },
+      { type: 'tf', q: 'The Statue of Liberty was a gift from France to the United States.', q_ar: 'تمثال الحرية كان هدية من فرنسا إلى الولايات المتحدة.', a: 0 },
+      { type: 'mc', q: 'This iconic 30-meter statue stands above Rio de Janeiro. What is it?', q_ar: 'هذا التمثال الشهير ارتفاعه 30 متراً ويطل على ريو دي جانيرو. ما اسمه؟', opts: ['Eiffel Tower', 'Statue of Liberty', 'Christ the Redeemer', 'Big Ben'], opts_ar: ['برج إيفل', 'تمثال الحرية', 'تمثال المسيح الفادي', 'بيغ بن'], a: 2 },
+      { type: 'mc', q: 'Where is the Great Pyramid of Giza?', q_ar: 'أين يقع هرم الجيزة الأكبر؟', opts: ['Mexico', 'Egypt', 'Peru', 'Sudan'], opts_ar: ['المكسيك', 'مصر', 'بيرو', 'السودان'], a: 1 },
     ],
     mid: [
-      { type: 'mc', q: 'The Taj Mahal is located in which country?', opts: ['Pakistan', 'India', 'Bangladesh', 'Nepal'], a: 1 },
-      { type: 'tf', q: 'Machu Picchu is in Peru.', a: 0 },
-      { type: 'mc', q: 'Which city is home to the Burj Khalifa?', opts: ['Doha', 'Riyadh', 'Dubai', 'Abu Dhabi'], a: 2 },
-      { type: 'mc', q: 'The Acropolis stands above which city?', opts: ['Rome', 'Athens', 'Istanbul', 'Cairo'], a: 1 },
+      { type: 'mc', q: 'The Taj Mahal is located in which country?', q_ar: 'في أي دولة يقع تاج محل؟', opts: ['Pakistan', 'India', 'Bangladesh', 'Nepal'], opts_ar: ['باكستان', 'الهند', 'بنغلاديش', 'نيبال'], a: 1 },
+      { type: 'tf', q: 'Machu Picchu is in Peru.', q_ar: 'تقع ماتشو بيتشو في بيرو.', a: 0 },
+      { type: 'mc', q: 'Which city is home to the Burj Khalifa?', q_ar: 'في أي مدينة يقع برج خليفة؟', opts: ['Doha', 'Riyadh', 'Dubai', 'Abu Dhabi'], opts_ar: ['الدوحة', 'الرياض', 'دبي', 'أبوظبي'], a: 2 },
+      { type: 'mc', q: 'The Acropolis stands above which city?', q_ar: 'فوق أي مدينة تقع الأكروبوليس؟', opts: ['Rome', 'Athens', 'Istanbul', 'Cairo'], opts_ar: ['روما', 'أثينا', 'إسطنبول', 'القاهرة'], a: 1 },
     ],
     hard: [
-      { type: 'mc', q: 'Petra is an archaeological city in:', opts: ['Israel', 'Jordan', 'Lebanon', 'Syria'], a: 1 },
-      { type: 'tf', q: 'The Great Wall of China is visible from space with the naked eye.', a: 1 },
-      { type: 'mc', q: 'Which landmark sits at 2,430 m above sea level in Peru?', opts: ['Cusco', 'Machu Picchu', 'Nazca', 'Sacsayhuamán'], a: 1 },
-      { type: 'mc', q: 'Angkor Wat was originally built as a:', opts: ['Buddhist temple', 'Hindu temple', 'Royal palace', 'Fortress'], a: 1 },
+      { type: 'mc', q: 'Petra is an archaeological city in:', q_ar: 'البتراء مدينة أثرية تقع في:', opts: ['Israel', 'Jordan', 'Lebanon', 'Syria'], opts_ar: ['إسرائيل', 'الأردن', 'لبنان', 'سوريا'], a: 1 },
+      { type: 'tf', q: 'The Great Wall of China is visible from space with the naked eye.', q_ar: 'سور الصين العظيم يُرى من الفضاء بالعين المجردة.', a: 1 },
+      { type: 'mc', q: 'Which landmark sits at 2,430 m above sea level in Peru?', q_ar: 'أي معلم يقع على ارتفاع 2,430 م فوق سطح البحر في بيرو؟', opts: ['Cusco', 'Machu Picchu', 'Nazca', 'Sacsayhuamán'], opts_ar: ['كوسكو', 'ماتشو بيتشو', 'نازكا', 'ساكسايواماًن'], a: 1 },
+      { type: 'mc', q: 'Angkor Wat was originally built as a:', q_ar: 'بُني معبد أنغكور وات في الأصل ليكون:', opts: ['Buddhist temple', 'Hindu temple', 'Royal palace', 'Fortress'], opts_ar: ['معبداً بوذياً', 'معبداً هندوسياً', 'قصراً ملكياً', 'حصناً'], a: 1 },
     ],
   },
   sports: {
     easy: [
-      { type: 'mc', q: 'How many players are on a soccer team on the field?', opts: ['9', '10', '11', '12'], a: 2 },
-      { type: 'tf', q: 'A marathon is exactly 42.195 km.', a: 0 },
-      { type: 'mc', q: 'Which sport is associated with Wimbledon?', opts: ['Cricket', 'Tennis', 'Rugby', 'Golf'], a: 1 },
-      { type: 'mc', q: 'How many points is a touchdown in American football?', opts: ['3', '6', '7', '10'], a: 1 },
+      { type: 'mc', q: 'How many players are on a soccer team on the field?', q_ar: 'كم عدد لاعبي فريق كرة القدم على أرض الملعب؟', opts: ['9', '10', '11', '12'], opts_ar: ['9', '10', '11', '12'], a: 2 },
+      { type: 'tf', q: 'A marathon is exactly 42.195 km.', q_ar: 'الماراثون مسافته 42.195 كم بالضبط.', a: 0 },
+      { type: 'mc', q: 'Which sport is associated with Wimbledon?', q_ar: 'أي رياضة ترتبط بويمبلدون؟', opts: ['Cricket', 'Tennis', 'Rugby', 'Golf'], opts_ar: ['الكريكيت', 'التنس', 'الرغبي', 'الغولف'], a: 1 },
+      { type: 'mc', q: 'How many points is a touchdown in American football?', q_ar: 'كم نقطة قيمة "تاتشداون" في كرة القدم الأمريكية؟', opts: ['3', '6', '7', '10'], opts_ar: ['3', '6', '7', '10'], a: 1 },
     ],
     mid: [
-      { type: 'mc', q: 'Which country won the 2022 FIFA World Cup?', opts: ['France', 'Brazil', 'Argentina', 'Germany'], a: 2 },
-      { type: 'tf', q: 'Michael Jordan won six NBA championships with the Bulls.', a: 0 },
-      { type: 'mc', q: 'How many Grand Slam tennis tournaments are there per year?', opts: ['2', '3', '4', '5'], a: 2 },
-      { type: 'mc', q: 'Which country invented the modern Olympics?', opts: ['Greece', 'France', 'Italy', 'UK'], a: 1 },
+      { type: 'mc', q: 'Which country won the 2022 FIFA World Cup?', q_ar: 'أي دولة فازت بكأس العالم لكرة القدم 2022؟', opts: ['France', 'Brazil', 'Argentina', 'Germany'], opts_ar: ['فرنسا', 'البرازيل', 'الأرجنتين', 'ألمانيا'], a: 2 },
+      { type: 'tf', q: 'Michael Jordan won six NBA championships with the Bulls.', q_ar: 'فاز مايكل جوردان بست بطولات في الدوري الأمريكي مع شيكاغو بولز.', a: 0 },
+      { type: 'mc', q: 'How many Grand Slam tennis tournaments are there per year?', q_ar: 'كم عدد بطولات الجراند سلام للتنس في السنة؟', opts: ['2', '3', '4', '5'], opts_ar: ['2', '3', '4', '5'], a: 2 },
+      { type: 'mc', q: 'Which country invented the modern Olympics?', q_ar: 'أي دولة ابتكرت الألعاب الأولمبية الحديثة؟', opts: ['Greece', 'France', 'Italy', 'UK'], opts_ar: ['اليونان', 'فرنسا', 'إيطاليا', 'المملكة المتحدة'], a: 1 },
     ],
     hard: [
-      { type: 'mc', q: 'Who has the most career Grand Slam singles titles in tennis?', opts: ['Roger Federer', 'Rafael Nadal', 'Novak Djokovic', 'Pete Sampras'], a: 2 },
-      { type: 'tf', q: 'Cricket\'s longest match (a "Timeless Test") lasted 9 days.', a: 0 },
-      { type: 'mc', q: 'Which country has won the most Tour de France titles?', opts: ['Belgium', 'France', 'Spain', 'USA'], a: 1 },
-      { type: 'mc', q: 'In F1, what does DRS stand for?', opts: ['Drag Reduction System', 'Drive Recovery System', 'Direct Response Steering', 'Dynamic Race Setup'], a: 0 },
+      { type: 'mc', q: 'Who has the most career Grand Slam singles titles in tennis?', q_ar: 'من يملك أكثر ألقاب الجراند سلام للفردي في تاريخ التنس؟', opts: ['Roger Federer', 'Rafael Nadal', 'Novak Djokovic', 'Pete Sampras'], opts_ar: ['روجر فيدرر', 'رافاييل نادال', 'نوفاك ديوكوفيتش', 'بيت سامبراس'], a: 2 },
+      { type: 'tf', q: 'Cricket\'s longest match (a "Timeless Test") lasted 9 days.', q_ar: 'أطول مباراة كريكيت ("اختبار بلا حدود زمنية") استمرت 9 أيام.', a: 0 },
+      { type: 'mc', q: 'Which country has won the most Tour de France titles?', q_ar: 'أي دولة فازت بأكثر ألقاب طواف فرنسا للدراجات؟', opts: ['Belgium', 'France', 'Spain', 'USA'], opts_ar: ['بلجيكا', 'فرنسا', 'إسبانيا', 'الولايات المتحدة'], a: 1 },
+      { type: 'mc', q: 'In F1, what does DRS stand for?', q_ar: 'في الفورمولا 1، ماذا يعني الاختصار DRS؟', opts: ['Drag Reduction System', 'Drive Recovery System', 'Direct Response Steering', 'Dynamic Race Setup'], opts_ar: ['نظام تقليل السحب', 'نظام استعادة القيادة', 'توجيه الاستجابة المباشرة', 'إعدادات السباق الديناميكية'], a: 0 },
     ],
   },
   music: {
     easy: [
-      { type: 'mc', q: 'Which band performed "Bohemian Rhapsody"?', opts: ['The Beatles', 'Queen', 'Pink Floyd', 'Led Zeppelin'], a: 1 },
-      { type: 'tf', q: 'Beyoncé was a member of Destiny\'s Child.', a: 0 },
-      { type: 'mc', q: 'How many strings does a standard guitar have?', opts: ['4', '5', '6', '7'], a: 2 },
-      { type: 'mc', q: 'Who is known as the "King of Pop"?', opts: ['Elvis Presley', 'Prince', 'Michael Jackson', 'Freddie Mercury'], a: 2 },
+      { type: 'mc', q: 'Which band performed "Bohemian Rhapsody"?', q_ar: 'أي فرقة أدت أغنية "بوهيميان رابسودي"؟', opts: ['The Beatles', 'Queen', 'Pink Floyd', 'Led Zeppelin'], opts_ar: ['البيتلز', 'كوين', 'بينك فلويد', 'ليد زيبلين'], a: 1 },
+      { type: 'tf', q: 'Beyoncé was a member of Destiny\'s Child.', q_ar: 'كانت بيونسيه عضواً في فرقة Destiny\'s Child.', a: 0 },
+      { type: 'mc', q: 'How many strings does a standard guitar have?', q_ar: 'كم عدد أوتار الجيتار العادي؟', opts: ['4', '5', '6', '7'], opts_ar: ['4', '5', '6', '7'], a: 2 },
+      { type: 'mc', q: 'Who is known as the "King of Pop"?', q_ar: 'من يُعرف بـ"ملك البوب"؟', opts: ['Elvis Presley', 'Prince', 'Michael Jackson', 'Freddie Mercury'], opts_ar: ['إلفيس بريسلي', 'برنس', 'مايكل جاكسون', 'فريدي ميركوري'], a: 2 },
     ],
     mid: [
-      { type: 'mc', q: 'Which Beatles album features "Come Together"?', opts: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], a: 1 },
-      { type: 'tf', q: 'Mozart died before he turned 40.', a: 0 },
-      { type: 'mc', q: 'Who created the Broadway musical "Hamilton"?', opts: ['Stephen Sondheim', 'Lin-Manuel Miranda', 'Andrew Lloyd Webber', 'Jonathan Larson'], a: 1 },
-      { type: 'mc', q: 'What instrument did Miles Davis primarily play?', opts: ['Saxophone', 'Trumpet', 'Piano', 'Drums'], a: 1 },
+      { type: 'mc', q: 'Which Beatles album features "Come Together"?', q_ar: 'أي ألبوم للبيتلز يحتوي على أغنية "كم توغذر"؟', opts: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], opts_ar: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], a: 1 },
+      { type: 'tf', q: 'Mozart died before he turned 40.', q_ar: 'توفي موزارت قبل بلوغه الأربعين.', a: 0 },
+      { type: 'mc', q: 'Who created the Broadway musical "Hamilton"?', q_ar: 'من أبدع مسرحية برودواي الموسيقية "هاميلتون"؟', opts: ['Stephen Sondheim', 'Lin-Manuel Miranda', 'Andrew Lloyd Webber', 'Jonathan Larson'], opts_ar: ['ستيفن سوندهايم', 'لين-مانويل ميراندا', 'أندرو لويد ويبر', 'جوناثان لارسون'], a: 1 },
+      { type: 'mc', q: 'What instrument did Miles Davis primarily play?', q_ar: 'ما الآلة التي عزف عليها مايلز ديفيس بشكل أساسي؟', opts: ['Saxophone', 'Trumpet', 'Piano', 'Drums'], opts_ar: ['الساكسفون', 'البوق', 'البيانو', 'الطبول'], a: 1 },
     ],
     hard: [
-      { type: 'mc', q: 'Which composer wrote "The Four Seasons"?', opts: ['Bach', 'Vivaldi', 'Handel', 'Pachelbel'], a: 1 },
-      { type: 'tf', q: 'The album "Thriller" by Michael Jackson is the best-selling album of all time.', a: 0 },
-      { type: 'mc', q: 'In music theory, how many notes are in a chromatic scale?', opts: ['7', '8', '12', '13'], a: 2 },
-      { type: 'mc', q: 'Which producer is associated with Wu-Tang Clan?', opts: ['Dr. Dre', 'RZA', 'Pharrell', 'Timbaland'], a: 1 },
+      { type: 'mc', q: 'Which composer wrote "The Four Seasons"?', q_ar: 'أي مؤلف كتب مقطوعة "الفصول الأربعة"؟', opts: ['Bach', 'Vivaldi', 'Handel', 'Pachelbel'], opts_ar: ['باخ', 'فيفالدي', 'هاندل', 'باخيلبيل'], a: 1 },
+      { type: 'tf', q: 'The album "Thriller" by Michael Jackson is the best-selling album of all time.', q_ar: 'ألبوم "ثريلر" لمايكل جاكسون هو الأكثر مبيعاً في التاريخ.', a: 0 },
+      { type: 'mc', q: 'In music theory, how many notes are in a chromatic scale?', q_ar: 'في نظرية الموسيقى، كم نغمة في السلم اللوني؟', opts: ['7', '8', '12', '13'], opts_ar: ['7', '8', '12', '13'], a: 2 },
+      { type: 'mc', q: 'Which producer is associated with Wu-Tang Clan?', q_ar: 'أي منتج يرتبط بفرقة وو-تانغ كلان؟', opts: ['Dr. Dre', 'RZA', 'Pharrell', 'Timbaland'], opts_ar: ['دكتور دري', 'آر زي إيه', 'فاريل', 'تيمبالاند'], a: 1 },
     ],
   },
   science: {
     easy: [
-      { type: 'mc', q: 'What is the chemical symbol for water?', opts: ['HO', 'H2O', 'O2', 'OH'], a: 1 },
-      { type: 'tf', q: 'The sun is a star.', a: 0 },
-      { type: 'mc', q: 'How many planets are in our solar system?', opts: ['7', '8', '9', '10'], a: 1 },
-      { type: 'mc', q: 'What is the largest organ in the human body?', opts: ['Liver', 'Brain', 'Skin', 'Heart'], a: 2 },
+      { type: 'mc', q: 'What is the chemical symbol for water?', q_ar: 'ما الرمز الكيميائي للماء؟', opts: ['HO', 'H2O', 'O2', 'OH'], opts_ar: ['HO', 'H2O', 'O2', 'OH'], a: 1 },
+      { type: 'tf', q: 'The sun is a star.', q_ar: 'الشمس نجم.', a: 0 },
+      { type: 'mc', q: 'How many planets are in our solar system?', q_ar: 'كم عدد الكواكب في مجموعتنا الشمسية؟', opts: ['7', '8', '9', '10'], opts_ar: ['7', '8', '9', '10'], a: 1 },
+      { type: 'mc', q: 'What is the largest organ in the human body?', q_ar: 'ما هو أكبر عضو في جسم الإنسان؟', opts: ['Liver', 'Brain', 'Skin', 'Heart'], opts_ar: ['الكبد', 'الدماغ', 'الجلد', 'القلب'], a: 2 },
     ],
     mid: [
-      { type: 'mc', q: 'What gas do plants absorb from the atmosphere?', opts: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Hydrogen'], a: 2 },
-      { type: 'tf', q: 'Light travels faster than sound.', a: 0 },
-      { type: 'mc', q: 'Which element has the atomic number 1?', opts: ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], a: 1 },
-      { type: 'mc', q: 'What does DNA stand for?', opts: ['Deoxyribonucleic acid', 'Dinitric acid', 'Diribonucleic acid', 'Deoxynitric acid'], a: 0 },
+      { type: 'mc', q: 'What gas do plants absorb from the atmosphere?', q_ar: 'أي غاز تمتصه النباتات من الجو؟', opts: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Hydrogen'], opts_ar: ['الأكسجين', 'النيتروجين', 'ثاني أكسيد الكربون', 'الهيدروجين'], a: 2 },
+      { type: 'tf', q: 'Light travels faster than sound.', q_ar: 'الضوء أسرع من الصوت.', a: 0 },
+      { type: 'mc', q: 'Which element has the atomic number 1?', q_ar: 'أي عنصر عدده الذري 1؟', opts: ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], opts_ar: ['الهيليوم', 'الهيدروجين', 'الأكسجين', 'الكربون'], a: 1 },
+      { type: 'mc', q: 'What does DNA stand for?', q_ar: 'ماذا يعني الاختصار DNA؟', opts: ['Deoxyribonucleic acid', 'Dinitric acid', 'Diribonucleic acid', 'Deoxynitric acid'], opts_ar: ['الحمض النووي الريبي منقوص الأكسجين', 'حمض ثنائي النيتريك', 'حمض ثنائي الريبونوكليك', 'حمض ديوكسي نيتريك'], a: 0 },
     ],
     hard: [
-      { type: 'mc', q: 'What is the speed of light in a vacuum (approx)?', opts: ['300,000 km/s', '150,000 km/s', '1,080,000 km/h', '30,000 km/s'], a: 0 },
-      { type: 'tf', q: 'Mercury is the closest planet to the Sun.', a: 0 },
-      { type: 'mc', q: 'Who proposed the theory of general relativity?', opts: ['Isaac Newton', 'Niels Bohr', 'Albert Einstein', 'Max Planck'], a: 2 },
-      { type: 'mc', q: 'What particle did the LHC famously confirm in 2012?', opts: ['Top quark', 'Higgs boson', 'Neutrino', 'Tau lepton'], a: 1 },
+      { type: 'mc', q: 'What is the speed of light in a vacuum (approx)?', q_ar: 'ما سرعة الضوء في الفراغ (تقريبياً)؟', opts: ['300,000 km/s', '150,000 km/s', '1,080,000 km/h', '30,000 km/s'], opts_ar: ['300,000 كم/ث', '150,000 كم/ث', '1,080,000 كم/س', '30,000 كم/ث'], a: 0 },
+      { type: 'tf', q: 'Mercury is the closest planet to the Sun.', q_ar: 'عطارد هو أقرب كوكب إلى الشمس.', a: 0 },
+      { type: 'mc', q: 'Who proposed the theory of general relativity?', q_ar: 'من اقترح نظرية النسبية العامة؟', opts: ['Isaac Newton', 'Niels Bohr', 'Albert Einstein', 'Max Planck'], opts_ar: ['إسحاق نيوتن', 'نيلز بور', 'ألبرت أينشتاين', 'ماكس بلانك'], a: 2 },
+      { type: 'mc', q: 'What particle did the LHC famously confirm in 2012?', q_ar: 'أي جسيم أكده مصادم الهادرونات الكبير عام 2012؟', opts: ['Top quark', 'Higgs boson', 'Neutrino', 'Tau lepton'], opts_ar: ['كوارك القمة', 'بوزون هيغز', 'نيوترينو', 'تاو ليبتون'], a: 1 },
     ],
   },
 };
 
+const qText = (q, lang) => lang === 'ar' && q.q_ar ? q.q_ar : q.q;
+const qOpts = (q, lang) => lang === 'ar' && q.opts_ar ? q.opts_ar : q.opts;
+
 const DIFFICULTIES = [
-  { id: 'easy', label: 'Easy', sub: 'Warm up the neurons',     mult: 1, count: 5,  bars: 1 },
-  { id: 'mid',  label: 'Mid',  sub: 'Where most people land',  mult: 2, count: 10, bars: 2 },
-  { id: 'hard', label: 'Hard', sub: 'Genuinely tough',         mult: 3, count: 15, bars: 3 },
+  { id: 'easy', label: 'Easy', label_ar: 'سهل',    sub: 'Warm up the neurons',     sub_ar: 'لتحمية الذهن',         mult: 1, count: 5,  bars: 1 },
+  { id: 'mid',  label: 'Mid',  label_ar: 'متوسط',  sub: 'Where most people land',  sub_ar: 'حيث يقف معظم الناس',   mult: 2, count: 10, bars: 2 },
+  { id: 'hard', label: 'Hard', label_ar: 'صعب',    sub: 'Genuinely tough',         sub_ar: 'صعب فعلاً',             mult: 3, count: 15, bars: 3 },
 ];
+const diffLabel = (d, lang) => d ? (lang === 'ar' ? d.label_ar : d.label) : '';
+const diffSub   = (d, lang) => d ? (lang === 'ar' ? d.sub_ar   : d.sub  ) : '';
 
 const TIMER_SECONDS = 15;
 const QUESTIONS_PER_MATCH = 5;
+
+// ───────────────────────── i18n strings ─────────────────────────
+const STRINGS = {
+  en: {
+    appTagline: 'Trivia, but',
+    appTagline2: 'actually fun.',
+    appBlurb: 'Race friends, climb the bracket, prove who knows their stuff.',
+    getStarted: 'Get started',
+    haveAccount: 'I have an account',
+    estLine: '</> EST 2026 </> v1.0.0',
+    // Auth
+    signupTab: 'Sign up', loginTab: 'Log in',
+    createAccount: 'Create your', accountWord: 'account',
+    welcome: 'Welcome', back: 'back',
+    signupBlurb: 'Pick a way to sign up. Takes 10 seconds.',
+    loginBlurb: 'Log back in to keep your streak alive.',
+    or: 'OR',
+    contWith: 'Continue with', signupWith: 'Sign up with',
+    apple: 'Apple', google: 'Google', email: 'email', phone: 'phone',
+    termsLine: 'By continuing you agree to our',
+    terms: 'Terms', privacy: 'Privacy',
+    noAccount: "Don't have an account?",
+    // Auth email/phone
+    signupWithEmail: 'Sign up with email', loginWithEmail: 'Log in with email',
+    signupWithPhone: 'Sign up with phone', loginWithPhone: 'Log in with phone',
+    emailIntroSignup: 'We just need a few basics.',
+    emailIntroLogin: 'Welcome back — pick up where you left off.',
+    name: 'Name', emailLbl: 'Email', password: 'Password', phoneLbl: 'Phone number',
+    namePlaceholder: 'Your display name',
+    emailPlaceholder: 'you@example.com',
+    phonePlaceholder: '555 123 4567',
+    pwdPlaceholder: '••••••••',
+    forgotPwd: 'Forgot password?',
+    createAccountBtn: 'Create account', loginBtn: 'Log in',
+    errName: 'Tell us your name.',
+    errEmail: 'Enter a valid email.',
+    errPwd: 'At least 6 characters.',
+    errPhone: 'Enter a valid phone number.',
+    errCode: 'Enter all 6 digits.',
+    phoneIntro: "We'll text you a 6-digit code. Standard rates apply.",
+    enterCode: 'Enter the code',
+    codeSentTo: 'We sent a 6-digit code to',
+    sendCode: 'Send code',
+    didntGet: "Didn't get it?",
+    resendIn: 'Resend in', resendCode: 'Resend code',
+    selectCountry: 'Select country',
+    searchCountry: 'Search country or code',
+    noMatches: 'No matches.',
+    // Home
+    welcomeBack: '// welcome back',
+    hey: 'Hey,',
+    dailyStreak: 'Daily streak', days: 'days',
+    keepStreak: 'Play today to keep it alive',
+    solo: 'Solo', soloSub: 'No timer, just vibes',
+    h2h: 'Head-to-head', h2hSub: 'Race a friend',
+    yourStats: 'Your stats',
+    rank: 'rank', wins: 'wins', accuracy: 'accuracy',
+    daysShort: ['M','T','W','T','F','S','S'],
+    // Categories
+    step01: 'STEP 01 / 03', step02: 'STEP 02 / 03', step03: 'STEP 03 / 03',
+    pickCat: 'Pick a category', pickCatSub: 'Or go random — let the bracket decide.',
+    nQuestions: 'questions',
+    randomMix: 'Random mix', randomMixSub: 'One question from each',
+    cont: 'Continue',
+    // Difficulty
+    pickDiff: 'Pick difficulty', pickDiffSub: 'Harder questions = bigger score multiplier.',
+    scoreMult: '× score',
+    // Invite
+    findOpp: 'Find your opponent', findOppSub: 'Create a room or join one with a code.',
+    createRoom: 'CREATE ROOM', joinRoom: 'JOIN ROOM',
+    roomCodePh: 'ROOM CODE', joinRoomBtn: 'Join room',
+    quickInvite: 'Quick invite', allArrow: 'all →',
+    invite: 'INVITE', genCode: 'Generate room code',
+    statusOnline: 'online', statusLastPlayed: '· last played 2m ago',
+    statusLastSeenH: 'last seen 1h ago', statusLastSeenY: 'last seen yesterday',
+    // Lobby
+    liveDot: '● live ·', oppReady: 'opponent ready', waitingP2: 'waiting for player 2',
+    shareCode: 'Share this code', shareCodeSub: "They'll find you on Play → Join with code",
+    copied: '✓ Copied', copy: '⧉ Copy', shareLink: '↑ Share link',
+    you: 'you', ready: 'ready', waitingDots: 'Waiting…', player2: 'player 2',
+    match: 'Match', mode: 'Mode', modeH2H: 'Head-to-head', modeSolo: 'Solo',
+    category: 'Category', random: 'Random',
+    difficulty: 'Difficulty', timer: 'Timer', perQuestion: 's per question',
+    questions: 'Questions',
+    startReady: 'Start when ready', waitingOpp: 'Waiting for opponent…',
+    // Question
+    qOf: 'Q', mix: 'MIX', tfTag: 'TRUE OR FALSE',
+    h2hTag: '⚡ head-to-head', soloTag: '🧠 solo · no timer',
+    truee: 'TRUE', falsee: 'FALSE', secondsLbl: 'seconds',
+    pickedB: 'picked',
+    correctTag: '✓ CORRECT · +100 PTS', wrongTag: '✗ NOT QUITE',
+    seeResults: 'See results', nextQ: 'Next question',
+    // Results
+    matchComplete: '// MATCH COMPLETE',
+    youWon: 'You won!', tie: "It's a tie.", lostClose: 'Lost — close one.',
+    flawless: 'Flawless!', correctOf: 'correct',
+    evenMatchup: 'Even matchup.',
+    by: 'By', points: 'points', brutal: 'Brutal.', rematch: 'Rematch?',
+    niceRun: 'Nice run.', pts: 'pts.',
+    correctLbl: 'correct', avgTimeLbl: 'avg time', streakLbl: 'streak',
+    rematchBtn: 'Rematch', backToHome: 'Back to home',
+    niceTry: 'nice try', gg: 'gg',
+    // Leaderboard
+    leaderboard: 'Leaderboard', friends: 'Friends', global: 'Global',
+    thisWeek: '// THIS WEEK · RESETS IN 3D 14H',
+    // Profile
+    profile: 'Profile', joinedApr: '@layla · joined apr 2026',
+    rankPill: 'RANK #142', streakPill: 'STREAK',
+    catMastery: 'Category mastery', achievements: 'Achievements',
+    achFirstWin: 'First win', achStreak7: '7-day streak', achSpeed: 'Speed demon',
+    playedLbl: 'played',
+    // Settings
+    settings: 'Settings', settingsSub: 'Tweak your experience.',
+    appearance: 'Appearance', themeLbl: 'Theme',
+    darkMode: 'Dark mode', lightMode: 'Light mode',
+    light: 'Light', dark: 'Dark',
+    language: 'Language', langSub: 'App display language',
+    notifications: 'Notifications',
+    pushNotif: 'Push notifications',
+    notifOn: 'Streak reminders + match invites',
+    notifOff: "Off — you won't be pinged",
+    account: 'Account', logout: 'Logout', logoutSub: 'Sign out of this device',
+    deleteAcc: 'Delete account', deleteAccSub: 'Erase your data and progress',
+    deleteConfirm: 'Delete account?',
+    deleteConfirmSub: "This wipes your streak, stats and mastery. Can't be undone.",
+    cancel: 'Cancel', deleteBtn: 'Delete',
+    versionLine: '</> BRACKET v1.0.0 </>',
+    // Nav
+    navHome: 'Home', navBoard: 'Board', navMe: 'Me', navSettings: 'Settings',
+    // Identity
+    userName: 'Layla', userFull: 'Layla A.', userInitial: 'L',
+    youSuffix: ' (you)',
+  },
+  ar: {
+    appTagline: 'معلومات،',
+    appTagline2: 'لكن ممتعة فعلاً.',
+    appBlurb: 'سابق أصدقاءك، تسلق القائمة، وأثبت من يعرف أكثر.',
+    getStarted: 'لنبدأ',
+    haveAccount: 'لدي حساب',
+    estLine: '</> منذ 2026 </> الإصدار 1.0.0',
+    signupTab: 'إنشاء حساب', loginTab: 'تسجيل الدخول',
+    createAccount: 'أنشئ', accountWord: 'حسابك',
+    welcome: 'أهلاً', back: 'بعودتك',
+    signupBlurb: 'اختر طريقة للتسجيل. تستغرق 10 ثوانٍ.',
+    loginBlurb: 'سجل دخولك لتحافظ على سلسلتك.',
+    or: 'أو',
+    contWith: 'متابعة بـ', signupWith: 'التسجيل بـ',
+    apple: 'آبل', google: 'جوجل', email: 'البريد الإلكتروني', phone: 'الهاتف',
+    termsLine: 'بالمتابعة فأنت توافق على',
+    terms: 'الشروط', privacy: 'الخصوصية',
+    noAccount: 'ليس لديك حساب؟',
+    signupWithEmail: 'إنشاء حساب بالبريد', loginWithEmail: 'تسجيل الدخول بالبريد',
+    signupWithPhone: 'إنشاء حساب بالهاتف', loginWithPhone: 'تسجيل الدخول بالهاتف',
+    emailIntroSignup: 'نحتاج بضع معلومات أساسية فقط.',
+    emailIntroLogin: 'أهلاً بعودتك — تابع من حيث توقفت.',
+    name: 'الاسم', emailLbl: 'البريد الإلكتروني', password: 'كلمة المرور', phoneLbl: 'رقم الهاتف',
+    namePlaceholder: 'اسمك الظاهر',
+    emailPlaceholder: 'you@example.com',
+    phonePlaceholder: '555 123 4567',
+    pwdPlaceholder: '••••••••',
+    forgotPwd: 'نسيت كلمة المرور؟',
+    createAccountBtn: 'إنشاء الحساب', loginBtn: 'تسجيل الدخول',
+    errName: 'أخبرنا باسمك.',
+    errEmail: 'أدخل بريداً إلكترونياً صحيحاً.',
+    errPwd: '6 أحرف على الأقل.',
+    errPhone: 'أدخل رقم هاتف صحيح.',
+    errCode: 'أدخل الأرقام الستة.',
+    phoneIntro: 'سنرسل لك رمزاً من 6 أرقام. قد تنطبق رسوم.',
+    enterCode: 'أدخل الرمز',
+    codeSentTo: 'أرسلنا رمزاً من 6 أرقام إلى',
+    sendCode: 'إرسال الرمز',
+    didntGet: 'لم يصلك؟',
+    resendIn: 'إعادة الإرسال خلال', resendCode: 'إعادة إرسال الرمز',
+    selectCountry: 'اختر الدولة',
+    searchCountry: 'ابحث باسم الدولة أو الرمز',
+    noMatches: 'لا توجد نتائج.',
+    welcomeBack: '// أهلاً بعودتك',
+    hey: 'مرحباً،',
+    dailyStreak: 'سلسلة يومية', days: 'يوم',
+    keepStreak: 'العب اليوم للحفاظ عليها',
+    solo: 'فردي', soloSub: 'بدون مؤقت، فقط للمتعة',
+    h2h: 'مواجهة', h2hSub: 'سابق صديقاً',
+    yourStats: 'إحصائياتك',
+    rank: 'الترتيب', wins: 'الانتصارات', accuracy: 'الدقة',
+    daysShort: ['ن','ث','ر','خ','ج','س','ح'],
+    step01: 'الخطوة 01 / 03', step02: 'الخطوة 02 / 03', step03: 'الخطوة 03 / 03',
+    pickCat: 'اختر فئة', pickCatSub: 'أو اتركها للحظ — دع القائمة تقرر.',
+    nQuestions: 'سؤال',
+    randomMix: 'مزيج عشوائي', randomMixSub: 'سؤال من كل فئة',
+    cont: 'متابعة',
+    pickDiff: 'اختر المستوى', pickDiffSub: 'الأسئلة الأصعب = نقاط مضاعفة أكثر.',
+    scoreMult: '× نقاط',
+    findOpp: 'ابحث عن منافسك', findOppSub: 'أنشئ غرفة أو انضم بكود.',
+    createRoom: 'إنشاء غرفة', joinRoom: 'انضمام',
+    roomCodePh: 'كود الغرفة', joinRoomBtn: 'انضمام للغرفة',
+    quickInvite: 'دعوة سريعة', allArrow: 'الكل →',
+    invite: 'دعوة', genCode: 'توليد كود غرفة',
+    statusOnline: 'متصل', statusLastPlayed: '· آخر لعبة قبل دقيقتين',
+    statusLastSeenH: 'آخر ظهور قبل ساعة', statusLastSeenY: 'آخر ظهور أمس',
+    liveDot: '● مباشر ·', oppReady: 'المنافس جاهز', waitingP2: 'بانتظار اللاعب 2',
+    shareCode: 'شارك هذا الكود', shareCodeSub: 'سيجدونك في "العب → انضم بالكود"',
+    copied: '✓ نُسخ', copy: '⧉ نسخ', shareLink: '↑ شارك الرابط',
+    you: 'أنت', ready: 'جاهز', waitingDots: 'بانتظار…', player2: 'اللاعب 2',
+    match: 'المباراة', mode: 'النمط', modeH2H: 'مواجهة', modeSolo: 'فردي',
+    category: 'الفئة', random: 'عشوائي',
+    difficulty: 'المستوى', timer: 'المؤقت', perQuestion: 'ث لكل سؤال',
+    questions: 'الأسئلة',
+    startReady: 'ابدأ عندما تكون جاهزاً', waitingOpp: 'بانتظار المنافس…',
+    qOf: 'س', mix: 'مزيج', tfTag: 'صح أم خطأ',
+    h2hTag: '⚡ مواجهة', soloTag: '🧠 فردي · بلا مؤقت',
+    truee: 'صح', falsee: 'خطأ', secondsLbl: 'ثانية',
+    pickedB: 'اختار',
+    correctTag: '✓ صحيح · +100 نقطة', wrongTag: '✗ ليس تماماً',
+    seeResults: 'عرض النتائج', nextQ: 'السؤال التالي',
+    matchComplete: '// انتهت المباراة',
+    youWon: 'فزت!', tie: 'تعادل.', lostClose: 'خسارة — كانت قريبة.',
+    flawless: 'بلا أخطاء!', correctOf: 'صحيحة',
+    evenMatchup: 'مباراة متكافئة.',
+    by: 'بفارق', points: 'نقاط', brutal: 'قاسٍ.', rematch: 'إعادة؟',
+    niceRun: 'جولة جيدة.', pts: 'نقطة.',
+    correctLbl: 'صحيحة', avgTimeLbl: 'متوسط الوقت', streakLbl: 'السلسلة',
+    rematchBtn: 'إعادة المباراة', backToHome: 'العودة للرئيسية',
+    niceTry: 'محاولة جيدة', gg: 'جي جي',
+    leaderboard: 'لوحة المتصدرين', friends: 'الأصدقاء', global: 'العالم',
+    thisWeek: '// هذا الأسبوع · يُعاد الضبط خلال 3 أيام و14 ساعة',
+    profile: 'الملف الشخصي', joinedApr: '@layla · انضمت أبريل 2026',
+    rankPill: 'الترتيب #142', streakPill: 'سلسلة',
+    catMastery: 'إتقان الفئات', achievements: 'الإنجازات',
+    achFirstWin: 'أول فوز', achStreak7: 'سلسلة 7 أيام', achSpeed: 'مارد السرعة',
+    playedLbl: 'لُعبت',
+    settings: 'الإعدادات', settingsSub: 'خصص تجربتك.',
+    appearance: 'المظهر', themeLbl: 'الثيم',
+    darkMode: 'الوضع الداكن', lightMode: 'الوضع الفاتح',
+    light: 'فاتح', dark: 'داكن',
+    language: 'اللغة', langSub: 'لغة عرض التطبيق',
+    notifications: 'الإشعارات',
+    pushNotif: 'الإشعارات',
+    notifOn: 'تذكير السلسلة + دعوات المباريات',
+    notifOff: 'مغلقة — لن نزعجك',
+    account: 'الحساب', logout: 'تسجيل الخروج', logoutSub: 'تسجيل الخروج من هذا الجهاز',
+    deleteAcc: 'حذف الحساب', deleteAccSub: 'حذف بياناتك وتقدمك',
+    deleteConfirm: 'حذف الحساب؟',
+    deleteConfirmSub: 'سيمحو ذلك سلسلتك وإحصائياتك وإتقانك. لا يمكن التراجع.',
+    cancel: 'إلغاء', deleteBtn: 'حذف',
+    versionLine: '</> BRACKET الإصدار 1.0.0 </>',
+    navHome: 'الرئيسية', navBoard: 'المتصدرون', navMe: 'حسابي', navSettings: 'الإعدادات',
+    userName: 'ليلى', userFull: 'ليلى أ.', userInitial: 'ل',
+    youSuffix: ' (أنت)',
+  },
+};
+
+const LangCtx = React.createContext({ L: STRINGS.en, lang: 'en' });
+const useLang = () => React.useContext(LangCtx);
 
 // ───────────────────────── Persistent local state ─────────────────────────
 const STORAGE_KEY = 'bracket.v1';
@@ -297,6 +556,7 @@ function useStore() {
       mastery: s.mastery ?? { movies: 78, landmarks: 64, music: 51, history: 32, sports: 18, science: 22 },
       darkMode: s.darkMode ?? true,
       notifications: s.notifications ?? false,
+      lang: s.lang ?? 'en',
     };
   });
   const update = useCallback((patch) => {
@@ -442,6 +702,8 @@ function SectionTitle({ t, children, action, onAction }) {
 }
 
 function BackHeader({ t, onBack, onMore }) {
+  const { lang } = useLang();
+  const backGlyph = lang === 'ar' ? '→' : '←';
   const btn = (txt, click) => (
     <div onClick={click} style={{
       width: 38, height: 38, borderRadius: 100,
@@ -456,7 +718,7 @@ function BackHeader({ t, onBack, onMore }) {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       marginBottom: 12, minHeight: 38,
     }}>
-      {onBack ? btn('←', onBack) : <div style={{ width: 38, height: 38 }} />}
+      {onBack ? btn(backGlyph, onBack) : <div style={{ width: 38, height: 38 }} />}
       {onMore ? btn('⋯', onMore) : <div style={{ width: 38, height: 38 }} />}
     </div>
   );
@@ -464,6 +726,7 @@ function BackHeader({ t, onBack, onMore }) {
 
 // Floating back chip — used on screens without a BackHeader
 function BackChip({ t, onBack }) {
+  const { lang } = useLang();
   if (!onBack) return null;
   return (
     <div onClick={onBack} style={{
@@ -475,16 +738,17 @@ function BackChip({ t, onBack }) {
       backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
       userSelect: 'none',
-    }}>←</div>
+    }}>{lang === 'ar' ? '→' : '←'}</div>
   );
 }
 
 function BottomNav({ t, active, onNav }) {
+  const { L } = useLang();
   const items = [
-    { id: 'home',     label: 'Home',     icon: '◇' },
-    { id: 'board',    label: 'Board',    icon: '◷' },
-    { id: 'me',       label: 'Me',       icon: '◉' },
-    { id: 'settings', label: 'Settings', icon: '⚙' },
+    { id: 'home',     label: L.navHome,     icon: '◇' },
+    { id: 'board',    label: L.navBoard,    icon: '◷' },
+    { id: 'me',       label: L.navMe,       icon: '◉' },
+    { id: 'settings', label: L.navSettings, icon: '⚙' },
   ];
   return (
     <div style={{
@@ -521,6 +785,8 @@ function BottomNav({ t, active, onNav }) {
 
 // ───────────────────────── 1. ONBOARDING ─────────────────────────
 function ScreenOnboarding({ t, dark, onStart }) {
+  const { L, lang } = useLang();
+  const arrow = lang === 'ar' ? '←' : '→';
   return (
     <Bg t={t} padTop={70}>
       <Orbs dark={dark} />
@@ -545,26 +811,26 @@ function ScreenOnboarding({ t, dark, onStart }) {
           fontSize: 38, fontWeight: 700, lineHeight: 1.05,
           margin: '40px 0 12px', textAlign: 'center', letterSpacing: '-0.02em',
         }}>
-          Trivia, but<br />
-          <span style={{ color: t.accent }}>actually fun.</span>
+          {L.appTagline}<br />
+          <span style={{ color: t.accent }}>{L.appTagline2}</span>
         </h1>
         <p style={{
           fontSize: 15, color: t.textDim, textAlign: 'center', margin: '0 0 36px',
           lineHeight: 1.5,
         }}>
-          Race friends, climb the bracket, prove who knows their stuff.
+          {L.appBlurb}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <PrimaryBtn t={t} onClick={() => onStart('signup')} icon={<span>→</span>}>Get started</PrimaryBtn>
-          <GhostBtn t={t} full onClick={() => onStart('login')}>I have an account</GhostBtn>
+          <PrimaryBtn t={t} onClick={() => onStart('signup')} icon={<span>{arrow}</span>}>{L.getStarted}</PrimaryBtn>
+          <GhostBtn t={t} full onClick={() => onStart('login')}>{L.haveAccount}</GhostBtn>
         </div>
 
         <div style={{
           marginTop: 32, fontFamily: MONO, fontSize: 10,
           color: t.textMute, textAlign: 'center', letterSpacing: '0.15em',
         }}>
-          {'</>'} EST 2026 {'</>'} v1.0.0
+          {L.estLine}
         </div>
       </div>
     </Bg>
@@ -573,6 +839,7 @@ function ScreenOnboarding({ t, dark, onStart }) {
 
 // ───────────────────────── 1b. AUTH ─────────────────────────
 function AuthTabs({ t, mode, onChange }) {
+  const { L } = useLang();
   const tab = (id, label) => {
     const a = mode === id;
     return (
@@ -592,8 +859,8 @@ function AuthTabs({ t, mode, onChange }) {
       background: t.surface, border: `1px solid ${t.border}`,
       marginBottom: 24,
     }}>
-      {tab('signup', 'Sign up')}
-      {tab('login',  'Log in')}
+      {tab('signup', L.signupTab)}
+      {tab('login',  L.loginTab)}
     </div>
   );
 }
@@ -649,7 +916,9 @@ const PhoneIcon = ({ color }) => (
 );
 
 function ScreenAuth({ t, dark, mode, setMode, onPick, onBack }) {
+  const { L } = useLang();
   const isSignup = mode === 'signup';
+  const verb = isSignup ? L.signupWith : L.contWith;
   return (
     <Bg t={t} padTop={56} padBottom={40}>
       <Orbs dark={dark} />
@@ -663,26 +932,24 @@ function ScreenAuth({ t, dark, mode, setMode, onPick, onBack }) {
           fontSize: 30, fontWeight: 700, lineHeight: 1.1,
           margin: '0 0 10px', letterSpacing: '-0.02em', textAlign: 'center',
         }}>
-          {isSignup ? <>Create your<br/><span style={{ color: t.accent }}>account</span></>
-                    : <>Welcome<br/><span style={{ color: t.accent }}>back</span></>}
+          {isSignup ? <>{L.createAccount}<br/><span style={{ color: t.accent }}>{L.accountWord}</span></>
+                    : <>{L.welcome}<br/><span style={{ color: t.accent }}>{L.back}</span></>}
         </h1>
         <p style={{
           fontSize: 14, color: t.textDim, textAlign: 'center',
           margin: '0 0 28px', lineHeight: 1.5,
         }}>
-          {isSignup
-            ? 'Pick a way to sign up. Takes 10 seconds.'
-            : 'Log back in to keep your streak alive.'}
+          {isSignup ? L.signupBlurb : L.loginBlurb}
         </p>
 
         <AuthTabs t={t} mode={mode} onChange={setMode} />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <ProviderBtn t={t} brand="apple" icon={<AppleIcon />}
-            label={`${isSignup ? 'Sign up' : 'Continue'} with Apple`}
+            label={`${verb} ${L.apple}`}
             onClick={() => onPick('apple')} />
           <ProviderBtn t={t} brand="google" icon={<GoogleIcon />}
-            label={`${isSignup ? 'Sign up' : 'Continue'} with Google`}
+            label={`${verb} ${L.google}`}
             onClick={() => onPick('google')} />
 
           <div style={{
@@ -691,15 +958,15 @@ function ScreenAuth({ t, dark, mode, setMode, onPick, onBack }) {
             letterSpacing: '0.1em',
           }}>
             <div style={{ flex: 1, height: 1, background: t.border }} />
-            OR
+            {L.or}
             <div style={{ flex: 1, height: 1, background: t.border }} />
           </div>
 
           <ProviderBtn t={t} icon={<MailIcon color={t.text} />}
-            label={`${isSignup ? 'Sign up' : 'Continue'} with email`}
+            label={`${verb} ${L.email}`}
             onClick={() => onPick('email')} />
           <ProviderBtn t={t} icon={<PhoneIcon color={t.text} />}
-            label={`${isSignup ? 'Sign up' : 'Continue'} with phone`}
+            label={`${verb} ${L.phone}`}
             onClick={() => onPick('phone')} />
         </div>
 
@@ -708,8 +975,8 @@ function ScreenAuth({ t, dark, mode, setMode, onPick, onBack }) {
           textAlign: 'center', lineHeight: 1.5,
         }}>
           {isSignup
-            ? <>By continuing you agree to our <span style={{ color: t.accent }}>Terms</span> and <span style={{ color: t.accent }}>Privacy</span>.</>
-            : <>Don't have an account? <span onClick={() => setMode('signup')} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>Sign up</span></>}
+            ? <>{L.termsLine} <span style={{ color: t.accent }}>{L.terms}</span> & <span style={{ color: t.accent }}>{L.privacy}</span>.</>
+            : <>{L.noAccount} <span onClick={() => setMode('signup')} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>{L.signupTab}</span></>}
         </div>
       </div>
     </Bg>
@@ -749,18 +1016,20 @@ function AuthInput({ t, label, value, onChange, type = 'text', placeholder, auto
 }
 
 function ScreenAuthEmail({ t, dark, mode, onBack, onSubmit }) {
+  const { L, lang } = useLang();
   const isSignup = mode === 'signup';
+  const arrow = lang === 'ar' ? '←' : '→';
   const [name, setName]   = useState('');
   const [email, setEmail] = useState('');
   const [pwd, setPwd]     = useState('');
   const [err, setErr]     = useState(null);
 
   const submit = () => {
-    if (isSignup && !name.trim()) return setErr({ field: 'name', msg: 'Tell us your name.' });
-    if (!email.includes('@'))     return setErr({ field: 'email', msg: 'Enter a valid email.' });
-    if (pwd.length < 6)           return setErr({ field: 'pwd', msg: 'At least 6 characters.' });
+    if (isSignup && !name.trim()) return setErr({ field: 'name', msg: L.errName });
+    if (!email.includes('@'))     return setErr({ field: 'email', msg: L.errEmail });
+    if (pwd.length < 6)           return setErr({ field: 'pwd', msg: L.errPwd });
     setErr(null);
-    onSubmit({ name: name.trim() || 'Layla', email });
+    onSubmit({ name: name.trim() || L.userName, email });
   };
 
   return (
@@ -772,34 +1041,34 @@ function ScreenAuthEmail({ t, dark, mode, onBack, onSubmit }) {
           fontSize: 28, fontWeight: 700, lineHeight: 1.15,
           margin: '8px 0 6px', letterSpacing: '-0.02em',
         }}>
-          {isSignup ? 'Sign up with email' : 'Log in with email'}
+          {isSignup ? L.signupWithEmail : L.loginWithEmail}
         </h1>
         <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 24px' }}>
-          {isSignup ? 'We just need a few basics.' : 'Welcome back — pick up where you left off.'}
+          {isSignup ? L.emailIntroSignup : L.emailIntroLogin}
         </p>
 
         {isSignup && (
-          <AuthInput t={t} label="Name" value={name} onChange={setName}
-            placeholder="Your display name" autoFocus
+          <AuthInput t={t} label={L.name} value={name} onChange={setName}
+            placeholder={L.namePlaceholder} autoFocus
             error={err?.field === 'name' ? err.msg : null} />
         )}
-        <AuthInput t={t} label="Email" type="email" value={email} onChange={setEmail}
-          placeholder="you@example.com" autoFocus={!isSignup}
+        <AuthInput t={t} label={L.emailLbl} type="email" value={email} onChange={setEmail}
+          placeholder={L.emailPlaceholder} autoFocus={!isSignup}
           error={err?.field === 'email' ? err.msg : null} />
-        <AuthInput t={t} label="Password" type="password" value={pwd} onChange={setPwd}
-          placeholder="••••••••"
+        <AuthInput t={t} label={L.password} type="password" value={pwd} onChange={setPwd}
+          placeholder={L.pwdPlaceholder}
           error={err?.field === 'pwd' ? err.msg : null} />
 
         {!isSignup && (
           <div style={{
-            textAlign: 'right', fontSize: 13, color: t.accent,
+            textAlign: lang === 'ar' ? 'left' : 'right', fontSize: 13, color: t.accent,
             margin: '-4px 0 18px', cursor: 'pointer', fontWeight: 600,
-          }}>Forgot password?</div>
+          }}>{L.forgotPwd}</div>
         )}
 
         <div style={{ marginTop: 8 }}>
-          <PrimaryBtn t={t} onClick={submit} icon={<span>→</span>}>
-            {isSignup ? 'Create account' : 'Log in'}
+          <PrimaryBtn t={t} onClick={submit} icon={<span>{arrow}</span>}>
+            {isSignup ? L.createAccountBtn : L.loginBtn}
           </PrimaryBtn>
         </div>
       </div>
@@ -808,73 +1077,76 @@ function ScreenAuthEmail({ t, dark, mode, onBack, onSubmit }) {
 }
 
 const COUNTRIES = [
-  { code: 'US', name: 'United States',        dial: '+1',   flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom',       dial: '+44',  flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada',               dial: '+1',   flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia',            dial: '+61',  flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany',              dial: '+49',  flag: '🇩🇪' },
-  { code: 'FR', name: 'France',               dial: '+33',  flag: '🇫🇷' },
-  { code: 'ES', name: 'Spain',                dial: '+34',  flag: '🇪🇸' },
-  { code: 'IT', name: 'Italy',                dial: '+39',  flag: '🇮🇹' },
-  { code: 'NL', name: 'Netherlands',          dial: '+31',  flag: '🇳🇱' },
-  { code: 'SE', name: 'Sweden',               dial: '+46',  flag: '🇸🇪' },
-  { code: 'NO', name: 'Norway',               dial: '+47',  flag: '🇳🇴' },
-  { code: 'DK', name: 'Denmark',              dial: '+45',  flag: '🇩🇰' },
-  { code: 'FI', name: 'Finland',              dial: '+358', flag: '🇫🇮' },
-  { code: 'IE', name: 'Ireland',              dial: '+353', flag: '🇮🇪' },
-  { code: 'PT', name: 'Portugal',             dial: '+351', flag: '🇵🇹' },
-  { code: 'CH', name: 'Switzerland',          dial: '+41',  flag: '🇨🇭' },
-  { code: 'AT', name: 'Austria',              dial: '+43',  flag: '🇦🇹' },
-  { code: 'BE', name: 'Belgium',              dial: '+32',  flag: '🇧🇪' },
-  { code: 'PL', name: 'Poland',               dial: '+48',  flag: '🇵🇱' },
-  { code: 'TR', name: 'Turkey',               dial: '+90',  flag: '🇹🇷' },
-  { code: 'GR', name: 'Greece',               dial: '+30',  flag: '🇬🇷' },
-  { code: 'AE', name: 'United Arab Emirates', dial: '+971', flag: '🇦🇪' },
-  { code: 'SA', name: 'Saudi Arabia',         dial: '+966', flag: '🇸🇦' },
-  { code: 'QA', name: 'Qatar',                dial: '+974', flag: '🇶🇦' },
-  { code: 'KW', name: 'Kuwait',               dial: '+965', flag: '🇰🇼' },
-  { code: 'BH', name: 'Bahrain',              dial: '+973', flag: '🇧🇭' },
-  { code: 'OM', name: 'Oman',                 dial: '+968', flag: '🇴🇲' },
-  { code: 'JO', name: 'Jordan',               dial: '+962', flag: '🇯🇴' },
-  { code: 'LB', name: 'Lebanon',              dial: '+961', flag: '🇱🇧' },
-  { code: 'EG', name: 'Egypt',                dial: '+20',  flag: '🇪🇬' },
-  { code: 'MA', name: 'Morocco',              dial: '+212', flag: '🇲🇦' },
-  { code: 'TN', name: 'Tunisia',              dial: '+216', flag: '🇹🇳' },
-  { code: 'DZ', name: 'Algeria',              dial: '+213', flag: '🇩🇿' },
-  { code: 'IL', name: 'Israel',               dial: '+972', flag: '🇮🇱' },
-  { code: 'IN', name: 'India',                dial: '+91',  flag: '🇮🇳' },
-  { code: 'PK', name: 'Pakistan',             dial: '+92',  flag: '🇵🇰' },
-  { code: 'BD', name: 'Bangladesh',           dial: '+880', flag: '🇧🇩' },
-  { code: 'CN', name: 'China',                dial: '+86',  flag: '🇨🇳' },
-  { code: 'JP', name: 'Japan',                dial: '+81',  flag: '🇯🇵' },
-  { code: 'KR', name: 'South Korea',          dial: '+82',  flag: '🇰🇷' },
-  { code: 'SG', name: 'Singapore',            dial: '+65',  flag: '🇸🇬' },
-  { code: 'MY', name: 'Malaysia',             dial: '+60',  flag: '🇲🇾' },
-  { code: 'ID', name: 'Indonesia',            dial: '+62',  flag: '🇮🇩' },
-  { code: 'TH', name: 'Thailand',             dial: '+66',  flag: '🇹🇭' },
-  { code: 'VN', name: 'Vietnam',              dial: '+84',  flag: '🇻🇳' },
-  { code: 'PH', name: 'Philippines',          dial: '+63',  flag: '🇵🇭' },
-  { code: 'NZ', name: 'New Zealand',          dial: '+64',  flag: '🇳🇿' },
-  { code: 'ZA', name: 'South Africa',         dial: '+27',  flag: '🇿🇦' },
-  { code: 'NG', name: 'Nigeria',              dial: '+234', flag: '🇳🇬' },
-  { code: 'KE', name: 'Kenya',                dial: '+254', flag: '🇰🇪' },
-  { code: 'GH', name: 'Ghana',                dial: '+233', flag: '🇬🇭' },
-  { code: 'BR', name: 'Brazil',               dial: '+55',  flag: '🇧🇷' },
-  { code: 'MX', name: 'Mexico',               dial: '+52',  flag: '🇲🇽' },
-  { code: 'AR', name: 'Argentina',            dial: '+54',  flag: '🇦🇷' },
-  { code: 'CL', name: 'Chile',                dial: '+56',  flag: '🇨🇱' },
-  { code: 'CO', name: 'Colombia',             dial: '+57',  flag: '🇨🇴' },
-  { code: 'PE', name: 'Peru',                 dial: '+51',  flag: '🇵🇪' },
-  { code: 'RU', name: 'Russia',               dial: '+7',   flag: '🇷🇺' },
-  { code: 'UA', name: 'Ukraine',              dial: '+380', flag: '🇺🇦' },
+  { code: 'US', name: 'United States',        name_ar: 'الولايات المتحدة',     dial: '+1',   flag: '🇺🇸' },
+  { code: 'GB', name: 'United Kingdom',       name_ar: 'المملكة المتحدة',      dial: '+44',  flag: '🇬🇧' },
+  { code: 'CA', name: 'Canada',               name_ar: 'كندا',                 dial: '+1',   flag: '🇨🇦' },
+  { code: 'AU', name: 'Australia',            name_ar: 'أستراليا',             dial: '+61',  flag: '🇦🇺' },
+  { code: 'DE', name: 'Germany',              name_ar: 'ألمانيا',              dial: '+49',  flag: '🇩🇪' },
+  { code: 'FR', name: 'France',               name_ar: 'فرنسا',                dial: '+33',  flag: '🇫🇷' },
+  { code: 'ES', name: 'Spain',                name_ar: 'إسبانيا',              dial: '+34',  flag: '🇪🇸' },
+  { code: 'IT', name: 'Italy',                name_ar: 'إيطاليا',              dial: '+39',  flag: '🇮🇹' },
+  { code: 'NL', name: 'Netherlands',          name_ar: 'هولندا',               dial: '+31',  flag: '🇳🇱' },
+  { code: 'SE', name: 'Sweden',               name_ar: 'السويد',               dial: '+46',  flag: '🇸🇪' },
+  { code: 'NO', name: 'Norway',               name_ar: 'النرويج',              dial: '+47',  flag: '🇳🇴' },
+  { code: 'DK', name: 'Denmark',              name_ar: 'الدنمارك',             dial: '+45',  flag: '🇩🇰' },
+  { code: 'FI', name: 'Finland',              name_ar: 'فنلندا',               dial: '+358', flag: '🇫🇮' },
+  { code: 'IE', name: 'Ireland',              name_ar: 'أيرلندا',              dial: '+353', flag: '🇮🇪' },
+  { code: 'PT', name: 'Portugal',             name_ar: 'البرتغال',             dial: '+351', flag: '🇵🇹' },
+  { code: 'CH', name: 'Switzerland',          name_ar: 'سويسرا',               dial: '+41',  flag: '🇨🇭' },
+  { code: 'AT', name: 'Austria',              name_ar: 'النمسا',               dial: '+43',  flag: '🇦🇹' },
+  { code: 'BE', name: 'Belgium',              name_ar: 'بلجيكا',               dial: '+32',  flag: '🇧🇪' },
+  { code: 'PL', name: 'Poland',               name_ar: 'بولندا',               dial: '+48',  flag: '🇵🇱' },
+  { code: 'TR', name: 'Turkey',               name_ar: 'تركيا',                dial: '+90',  flag: '🇹🇷' },
+  { code: 'GR', name: 'Greece',               name_ar: 'اليونان',              dial: '+30',  flag: '🇬🇷' },
+  { code: 'AE', name: 'United Arab Emirates', name_ar: 'الإمارات العربية المتحدة', dial: '+971', flag: '🇦🇪' },
+  { code: 'SA', name: 'Saudi Arabia',         name_ar: 'المملكة العربية السعودية', dial: '+966', flag: '🇸🇦' },
+  { code: 'QA', name: 'Qatar',                name_ar: 'قطر',                  dial: '+974', flag: '🇶🇦' },
+  { code: 'KW', name: 'Kuwait',               name_ar: 'الكويت',               dial: '+965', flag: '🇰🇼' },
+  { code: 'BH', name: 'Bahrain',              name_ar: 'البحرين',              dial: '+973', flag: '🇧🇭' },
+  { code: 'OM', name: 'Oman',                 name_ar: 'عُمان',                 dial: '+968', flag: '🇴🇲' },
+  { code: 'JO', name: 'Jordan',               name_ar: 'الأردن',               dial: '+962', flag: '🇯🇴' },
+  { code: 'LB', name: 'Lebanon',              name_ar: 'لبنان',                dial: '+961', flag: '🇱🇧' },
+  { code: 'EG', name: 'Egypt',                name_ar: 'مصر',                  dial: '+20',  flag: '🇪🇬' },
+  { code: 'MA', name: 'Morocco',              name_ar: 'المغرب',               dial: '+212', flag: '🇲🇦' },
+  { code: 'TN', name: 'Tunisia',              name_ar: 'تونس',                 dial: '+216', flag: '🇹🇳' },
+  { code: 'DZ', name: 'Algeria',              name_ar: 'الجزائر',              dial: '+213', flag: '🇩🇿' },
+  { code: 'IL', name: 'Israel',               name_ar: 'إسرائيل',              dial: '+972', flag: '🇮🇱' },
+  { code: 'IN', name: 'India',                name_ar: 'الهند',                dial: '+91',  flag: '🇮🇳' },
+  { code: 'PK', name: 'Pakistan',             name_ar: 'باكستان',              dial: '+92',  flag: '🇵🇰' },
+  { code: 'BD', name: 'Bangladesh',           name_ar: 'بنغلاديش',             dial: '+880', flag: '🇧🇩' },
+  { code: 'CN', name: 'China',                name_ar: 'الصين',                dial: '+86',  flag: '🇨🇳' },
+  { code: 'JP', name: 'Japan',                name_ar: 'اليابان',              dial: '+81',  flag: '🇯🇵' },
+  { code: 'KR', name: 'South Korea',          name_ar: 'كوريا الجنوبية',       dial: '+82',  flag: '🇰🇷' },
+  { code: 'SG', name: 'Singapore',            name_ar: 'سنغافورة',             dial: '+65',  flag: '🇸🇬' },
+  { code: 'MY', name: 'Malaysia',             name_ar: 'ماليزيا',              dial: '+60',  flag: '🇲🇾' },
+  { code: 'ID', name: 'Indonesia',            name_ar: 'إندونيسيا',            dial: '+62',  flag: '🇮🇩' },
+  { code: 'TH', name: 'Thailand',             name_ar: 'تايلاند',              dial: '+66',  flag: '🇹🇭' },
+  { code: 'VN', name: 'Vietnam',              name_ar: 'فيتنام',               dial: '+84',  flag: '🇻🇳' },
+  { code: 'PH', name: 'Philippines',          name_ar: 'الفلبين',              dial: '+63',  flag: '🇵🇭' },
+  { code: 'NZ', name: 'New Zealand',          name_ar: 'نيوزيلندا',            dial: '+64',  flag: '🇳🇿' },
+  { code: 'ZA', name: 'South Africa',         name_ar: 'جنوب أفريقيا',         dial: '+27',  flag: '🇿🇦' },
+  { code: 'NG', name: 'Nigeria',              name_ar: 'نيجيريا',              dial: '+234', flag: '🇳🇬' },
+  { code: 'KE', name: 'Kenya',                name_ar: 'كينيا',                dial: '+254', flag: '🇰🇪' },
+  { code: 'GH', name: 'Ghana',                name_ar: 'غانا',                 dial: '+233', flag: '🇬🇭' },
+  { code: 'BR', name: 'Brazil',               name_ar: 'البرازيل',             dial: '+55',  flag: '🇧🇷' },
+  { code: 'MX', name: 'Mexico',               name_ar: 'المكسيك',              dial: '+52',  flag: '🇲🇽' },
+  { code: 'AR', name: 'Argentina',            name_ar: 'الأرجنتين',            dial: '+54',  flag: '🇦🇷' },
+  { code: 'CL', name: 'Chile',                name_ar: 'تشيلي',                dial: '+56',  flag: '🇨🇱' },
+  { code: 'CO', name: 'Colombia',             name_ar: 'كولومبيا',             dial: '+57',  flag: '🇨🇴' },
+  { code: 'PE', name: 'Peru',                 name_ar: 'بيرو',                 dial: '+51',  flag: '🇵🇪' },
+  { code: 'RU', name: 'Russia',               name_ar: 'روسيا',                dial: '+7',   flag: '🇷🇺' },
+  { code: 'UA', name: 'Ukraine',              name_ar: 'أوكرانيا',             dial: '+380', flag: '🇺🇦' },
 ];
+const cName = (c, lang) => lang === 'ar' && c.name_ar ? c.name_ar : c.name;
 
 function CountryPicker({ t, value, onChange, onClose }) {
+  const { L, lang } = useLang();
   const [query, setQuery] = useState('');
   const filtered = COUNTRIES.filter(c => {
     const q = query.trim().toLowerCase();
     if (!q) return true;
     return c.name.toLowerCase().includes(q)
+        || (c.name_ar && c.name_ar.includes(query.trim()))
         || c.dial.includes(q.replace(/^\+/, ''))
         || c.code.toLowerCase().includes(q);
   });
@@ -893,7 +1165,7 @@ function CountryPicker({ t, value, onChange, onClose }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 14,
         }}>
-          <div style={{ fontSize: 18, fontWeight: 700 }}>Select country</div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>{L.selectCountry}</div>
           <div onClick={onClose} style={{
             width: 34, height: 34, borderRadius: 100,
             background: t.surface, border: `1px solid ${t.border}`,
@@ -908,7 +1180,7 @@ function CountryPicker({ t, value, onChange, onClose }) {
         }}>
           <span style={{ color: t.textMute, marginRight: 8 }}>⌕</span>
           <input value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Search country or code"
+            placeholder={L.searchCountry}
             autoFocus
             style={{
               flex: 1, padding: '10px 0', background: 'transparent', border: 0,
@@ -922,7 +1194,7 @@ function CountryPicker({ t, value, onChange, onClose }) {
           <div style={{
             padding: 24, textAlign: 'center',
             color: t.textDim, fontSize: 13,
-          }}>No matches.</div>
+          }}>{L.noMatches}</div>
         )}
         {filtered.map(c => {
           const selected = c.code === value.code;
@@ -936,7 +1208,7 @@ function CountryPicker({ t, value, onChange, onClose }) {
                 cursor: 'pointer',
               }}>
               <span style={{ fontSize: 22, lineHeight: 1 }}>{c.flag}</span>
-              <span style={{ flex: 1, fontSize: 15, fontWeight: selected ? 700 : 500 }}>{c.name}</span>
+              <span style={{ flex: 1, fontSize: 15, fontWeight: selected ? 700 : 500 }}>{cName(c, lang)}</span>
               <span style={{
                 fontFamily: MONO, fontSize: 13,
                 color: selected ? t.accent : t.textDim, fontWeight: 600,
@@ -950,7 +1222,9 @@ function CountryPicker({ t, value, onChange, onClose }) {
 }
 
 function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
+  const { L, lang } = useLang();
   const isSignup = mode === 'signup';
+  const arrow = lang === 'ar' ? '←' : '→';
   const [step, setStep] = useState('number'); // 'number' | 'otp'
   const [country, setCountry] = useState(COUNTRIES[0]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -968,7 +1242,7 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
 
   const sendCode = () => {
     const digits = phone.replace(/\D/g, '');
-    if (digits.length < 7) return setErr('Enter a valid phone number.');
+    if (digits.length < 7) return setErr(L.errPhone);
     setErr(null);
     setStep('otp');
     setResendIn(30);
@@ -989,7 +1263,7 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
   };
 
   const verify = () => {
-    if (code.some(d => !d)) return setErr('Enter all 6 digits.');
+    if (code.some(d => !d)) return setErr(L.errCode);
     setErr(null);
     onSubmit({ phone });
   };
@@ -1006,17 +1280,17 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
               fontSize: 28, fontWeight: 700, lineHeight: 1.15,
               margin: '8px 0 6px', letterSpacing: '-0.02em',
             }}>
-              {isSignup ? 'Sign up with phone' : 'Log in with phone'}
+              {isSignup ? L.signupWithPhone : L.loginWithPhone}
             </h1>
             <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 24px' }}>
-              We'll text you a 6-digit code. Standard rates apply.
+              {L.phoneIntro}
             </p>
 
             <div style={{ marginBottom: 14 }}>
               <div style={{
                 fontFamily: MONO, fontSize: 11, color: t.textDim,
                 letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8,
-              }}>Phone number</div>
+              }}>{L.phoneLbl}</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div onClick={() => setPickerOpen(true)} style={{
                   display: 'flex', alignItems: 'center', gap: 8,
@@ -1034,7 +1308,7 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
                   borderRadius: 14, padding: '0 14px',
                 }}>
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="555 123 4567" autoFocus inputMode="tel"
+                    placeholder={L.phonePlaceholder} autoFocus inputMode="tel" dir="ltr"
                     style={{
                       flex: 1, padding: '14px 0', background: 'transparent', border: 0,
                       outline: 'none', color: t.text, fontFamily: SANS, fontSize: 15,
@@ -1045,8 +1319,8 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
             </div>
 
             <div style={{ marginTop: 12 }}>
-              <PrimaryBtn t={t} onClick={sendCode} icon={<span>→</span>}>
-                Send code
+              <PrimaryBtn t={t} onClick={sendCode} icon={<span>{arrow}</span>}>
+                {L.sendCode}
               </PrimaryBtn>
             </div>
           </>
@@ -1055,9 +1329,9 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
             <h1 style={{
               fontSize: 28, fontWeight: 700, lineHeight: 1.15,
               margin: '8px 0 6px', letterSpacing: '-0.02em',
-            }}>Enter the code</h1>
+            }}>{L.enterCode}</h1>
             <p style={{ fontSize: 13, color: t.textDim, margin: '0 0 28px' }}>
-              We sent a 6-digit code to <span style={{ color: t.text, fontWeight: 600 }}>{country.dial} {phone}</span>.
+              {L.codeSentTo} <span style={{ color: t.text, fontWeight: 600 }} dir="ltr">{country.dial} {phone}</span>
             </p>
 
             <div style={{
@@ -1086,14 +1360,14 @@ function ScreenAuthPhone({ t, dark, mode, onBack, onSubmit }) {
             <div style={{
               fontSize: 13, color: t.textDim, marginBottom: 18,
             }}>
-              Didn't get it?{' '}
+              {L.didntGet}{' '}
               {resendIn > 0
-                ? <span style={{ color: t.textMute, fontFamily: MONO }}>Resend in {resendIn}s</span>
-                : <span onClick={() => setResendIn(30)} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>Resend code</span>}
+                ? <span style={{ color: t.textMute, fontFamily: MONO }}>{L.resendIn} {resendIn}s</span>
+                : <span onClick={() => setResendIn(30)} style={{ color: t.accent, cursor: 'pointer', fontWeight: 600 }}>{L.resendCode}</span>}
             </div>
 
-            <PrimaryBtn t={t} onClick={verify} icon={<span>→</span>}>
-              {isSignup ? 'Create account' : 'Log in'}
+            <PrimaryBtn t={t} onClick={verify} icon={<span>{arrow}</span>}>
+              {isSignup ? L.createAccountBtn : L.loginBtn}
             </PrimaryBtn>
           </>
         )}
@@ -1149,9 +1423,10 @@ function Stat({ t, label, value }) {
 }
 
 function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }) {
+  const { L } = useLang();
   const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
   const rank = '#142';
-  const days = ['M','T','W','T','F','S','S'];
+  const days = L.daysShort;
   const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0
   return (
     <Bg t={t} padTop={56}>
@@ -1163,8 +1438,8 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
           marginTop: 6, marginBottom: 24,
         }}>
           <div>
-            <div style={{ fontSize: 13, color: t.textDim, fontFamily: MONO }}>// welcome back</div>
-            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>Hey, Layla</div>
+            <div style={{ fontSize: 13, color: t.textDim, fontFamily: MONO }}>{L.welcomeBack}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 2 }}>{L.hey} {L.userName}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div onClick={onToggleTheme} title="Toggle theme" style={{
@@ -1179,7 +1454,7 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 700, fontSize: 15,
               border: `2px solid ${t.border}`, cursor: 'pointer',
-            }}>L</div>
+            }}>{L.userInitial}</div>
           </div>
         </div>
 
@@ -1196,12 +1471,12 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
               <div style={{
                 fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em',
                 opacity: 0.85, textTransform: 'uppercase',
-              }}>Daily streak</div>
+              }}>{L.dailyStreak}</div>
               <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1, marginTop: 6 }}>
-                {store.streak} <span style={{ fontSize: 18, opacity: 0.7 }}>days</span>
+                {store.streak} <span style={{ fontSize: 18, opacity: 0.7 }}>{L.days}</span>
               </div>
               <div style={{ fontSize: 13, opacity: 0.85, marginTop: 6 }}>
-                Play today to keep it alive
+                {L.keepStreak}
               </div>
             </div>
             <div style={{
@@ -1228,17 +1503,17 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
         </Card>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
-          <ModeCard t={t} title="Solo" subtitle="No timer, just vibes" emoji="🧠" onClick={() => onPickMode('solo')} />
-          <ModeCard t={t} title="Head-to-head" subtitle="Race a friend" emoji="⚡" accent onClick={() => onPickMode('team')} />
+          <ModeCard t={t} title={L.solo} subtitle={L.soloSub} emoji="🧠" onClick={() => onPickMode('solo')} />
+          <ModeCard t={t} title={L.h2h} subtitle={L.h2hSub} emoji="⚡" accent onClick={() => onPickMode('team')} />
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <SectionTitle t={t}>Your stats</SectionTitle>
+          <SectionTitle t={t}>{L.yourStats}</SectionTitle>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-          <Stat t={t} label="rank" value={rank} />
-          <Stat t={t} label="wins" value={store.wins} />
-          <Stat t={t} label="accuracy" value={`${accuracy}%`} />
+          <Stat t={t} label={L.rank} value={rank} />
+          <Stat t={t} label={L.wins} value={store.wins} />
+          <Stat t={t} label={L.accuracy} value={`${accuracy}%`} />
         </div>
       </div>
     </Bg>
@@ -1247,6 +1522,7 @@ function ScreenHome({ t, dark, store, onBack, onPickMode, onNav, onToggleTheme }
 
 // ───────────────────────── 3. CATEGORIES ─────────────────────────
 function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
+  const { L, lang } = useLang();
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
@@ -1254,13 +1530,13 @@ function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
         <BackHeader t={t} onBack={onBack} />
         <div style={{ marginTop: 8 }}>
           <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
-            STEP 01 / 03
+            {L.step01}
           </div>
           <h1 style={{ fontSize: 30, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
-            Pick a category
+            {L.pickCat}
           </h1>
           <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
-            Or go random — let the bracket decide.
+            {L.pickCatSub}
           </p>
         </div>
 
@@ -1293,12 +1569,12 @@ function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
                 )}
                 <div style={{ fontSize: 30, position: 'relative' }}>{c.emoji}</div>
                 <div style={{ position: 'relative' }}>
-                  <div style={{ fontSize: 17, fontWeight: 700 }}>{c.label}</div>
+                  <div style={{ fontSize: 17, fontWeight: 700 }}>{catLabel(c, lang)}</div>
                   <div style={{
                     fontFamily: MONO, fontSize: 10,
                     color: active ? 'rgba(255,255,255,0.85)' : t.textDim,
                     marginTop: 2, letterSpacing: '0.05em',
-                  }}>{c.count} questions</div>
+                  }}>{c.count} {L.nQuestions}</div>
                 </div>
               </div>
             );
@@ -1314,16 +1590,16 @@ function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>🎲</span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>Random mix</div>
-              <div style={{ fontSize: 12 }}>One question from each</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: t.text }}>{L.randomMix}</div>
+              <div style={{ fontSize: 12 }}>{L.randomMixSub}</div>
             </div>
           </div>
-          <span style={{ fontFamily: MONO, color: t.accent }}>→</span>
+          <span style={{ fontFamily: MONO, color: t.accent }}>{lang === 'ar' ? '←' : '→'}</span>
         </div>
 
         <div style={{ marginTop: 22 }}>
-          <PrimaryBtn t={t} onClick={() => selected && onPick(selected, true)} disabled={!selected} icon={<span>→</span>}>
-            Continue
+          <PrimaryBtn t={t} onClick={() => selected && onPick(selected, true)} disabled={!selected} icon={<span>{lang === 'ar' ? '←' : '→'}</span>}>
+            {L.cont}
           </PrimaryBtn>
         </div>
       </div>
@@ -1333,19 +1609,20 @@ function ScreenCategories({ t, dark, selected, onPick, onBack, onRandom }) {
 
 // ───────────────────────── 4. DIFFICULTY ─────────────────────────
 function ScreenDifficulty({ t, dark, selected, onPick, onBack, onContinue }) {
+  const { L, lang } = useLang();
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
-          STEP 02 / 03
+          {L.step02}
         </div>
         <h1 style={{ fontSize: 30, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
-          Pick difficulty
+          {L.pickDiff}
         </h1>
         <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
-          Harder questions = bigger score multiplier.
+          {L.pickDiffSub}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
@@ -1373,10 +1650,10 @@ function ScreenDifficulty({ t, dark, selected, onPick, onBack, onContinue }) {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 700 }}>{l.label}</div>
-                    <Pill t={t} tone={tone}>{l.mult}× score</Pill>
+                    <div style={{ fontSize: 18, fontWeight: 700 }}>{diffLabel(l, lang)}</div>
+                    <Pill t={t} tone={tone}>{l.mult}{L.scoreMult}</Pill>
                   </div>
-                  <div style={{ fontSize: 13, color: t.textDim, marginTop: 2 }}>{l.sub}</div>
+                  <div style={{ fontSize: 13, color: t.textDim, marginTop: 2 }}>{diffSub(l, lang)}</div>
                 </div>
                 <div style={{
                   width: 22, height: 22, borderRadius: 100,
@@ -1391,7 +1668,7 @@ function ScreenDifficulty({ t, dark, selected, onPick, onBack, onContinue }) {
         </div>
 
         <div style={{ marginTop: 28 }}>
-          <PrimaryBtn t={t} onClick={onContinue} disabled={!selected} icon={<span>→</span>}>Continue</PrimaryBtn>
+          <PrimaryBtn t={t} onClick={onContinue} disabled={!selected} icon={<span>{lang === 'ar' ? '←' : '→'}</span>}>{L.cont}</PrimaryBtn>
         </div>
       </div>
     </Bg>
@@ -1400,6 +1677,7 @@ function ScreenDifficulty({ t, dark, selected, onPick, onBack, onContinue }) {
 
 // ───────────────────────── 5. INVITE ─────────────────────────
 function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
+  const { L, lang } = useLang();
   const [tab, setTab] = useState('create');
   const [joinCode, setJoinCode] = useState('');
   return (
@@ -1408,13 +1686,13 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, letterSpacing: '0.1em' }}>
-          STEP 03 / 03
+          {L.step03}
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: '6px 0 4px', letterSpacing: '-0.02em' }}>
-          Find your opponent
+          {L.findOpp}
         </h1>
         <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
-          Create a room or join one with a code.
+          {L.findOppSub}
         </p>
 
         <div style={{
@@ -1422,7 +1700,7 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
           background: t.surface, border: `1px solid ${t.border}`,
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4,
         }}>
-          {[['create','CREATE ROOM'],['join','JOIN ROOM']].map(([id, label]) => (
+          {[['create', L.createRoom],['join', L.joinRoom]].map(([id, label]) => (
             <div key={id} onClick={() => setTab(id)} style={{
               padding: '10px', textAlign: 'center', borderRadius: 10,
               background: tab === id ? t.accent : 'transparent',
@@ -1437,7 +1715,7 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
             <input
               value={joinCode}
               onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,6))}
-              placeholder="ROOM CODE"
+              placeholder={L.roomCodePh}
               style={{
                 width: '100%', padding: '18px 16px', borderRadius: 16,
                 background: t.surface, border: `1px solid ${t.border}`,
@@ -1446,22 +1724,22 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
               }}
             />
             <div style={{ marginTop: 14 }}>
-              <PrimaryBtn t={t} onClick={() => joinCode.length === 6 && onJoin(joinCode)} disabled={joinCode.length !== 6} icon={<span>→</span>}>
-                Join room
+              <PrimaryBtn t={t} onClick={() => joinCode.length === 6 && onJoin(joinCode)} disabled={joinCode.length !== 6} icon={<span>{lang === 'ar' ? '←' : '→'}</span>}>
+                {L.joinRoomBtn}
               </PrimaryBtn>
             </div>
           </div>
         ) : (
           <Fragment>
             <div style={{ marginTop: 18 }}>
-              <SectionTitle t={t} action="all →">Quick invite</SectionTitle>
+              <SectionTitle t={t} action={L.allArrow}>{L.quickInvite}</SectionTitle>
             </div>
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
-                { n: 'Omar',   s: 'online · last played 2m ago', online: true },
-                { n: 'Sarah',  s: 'online',                      online: true },
-                { n: 'Yousef', s: 'last seen 1h ago' },
-                { n: 'Noor',   s: 'last seen yesterday' },
+                { n: 'Omar',   s: `${L.statusOnline} ${L.statusLastPlayed}`, online: true },
+                { n: 'Sarah',  s: L.statusOnline,                            online: true },
+                { n: 'Yousef', s: L.statusLastSeenH },
+                { n: 'Noor',   s: L.statusLastSeenY },
               ].map((f, i) => (
                 <div key={i} style={{
                   padding: 12, borderRadius: 14,
@@ -1492,13 +1770,13 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
                     border: f.online ? 'none' : `1px solid ${t.border}`,
                     fontFamily: MONO, fontSize: 11, fontWeight: 700,
                     letterSpacing: '0.05em', cursor: 'pointer',
-                  }}>INVITE</button>
+                  }}>{L.invite}</button>
                 </div>
               ))}
             </div>
 
             <div style={{ marginTop: 18 }}>
-              <PrimaryBtn t={t} onClick={() => onCreate(null)} icon={<span>→</span>}>Generate room code</PrimaryBtn>
+              <PrimaryBtn t={t} onClick={() => onCreate(null)} icon={<span>{lang === 'ar' ? '←' : '→'}</span>}>{L.genCode}</PrimaryBtn>
             </div>
           </Fragment>
         )}
@@ -1509,6 +1787,7 @@ function ScreenInvite({ t, dark, onBack, onCreate, onJoin }) {
 
 // ───────────────────────── 6. LOBBY ─────────────────────────
 function PlayerRow({ t, name, sub, rank, you, pending }) {
+  const { L } = useLang();
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12, padding: 14,
@@ -1527,7 +1806,7 @@ function PlayerRow({ t, name, sub, rank, you, pending }) {
         <div style={{ fontSize: 15, fontWeight: 600 }}>{name}</div>
         <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{sub}</div>
       </div>
-      {you && <Pill t={t} tone="accent">you</Pill>}
+      {you && <Pill t={t} tone="accent">{L.you}</Pill>}
       {rank && !you && <span style={{ fontFamily: MONO, fontSize: 12, color: t.textDim }}>{rank}</span>}
     </div>
   );
@@ -1547,9 +1826,9 @@ function Setting({ t, label, value, last }) {
 }
 
 function ScreenLobby({ t, dark, code, opponentName, category, difficulty, onBack, onStart }) {
+  const { L, lang } = useLang();
   const [opponentReady, setOpponentReady] = useState(false);
   const [copied, setCopied] = useState(false);
-  // simulate opponent joining after a short delay
   useEffect(() => {
     const id = setTimeout(() => setOpponentReady(true), 2400);
     return () => clearTimeout(id);
@@ -1566,12 +1845,12 @@ function ScreenLobby({ t, dark, code, opponentName, category, difficulty, onBack
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ textAlign: 'center', marginTop: 4 }}>
-          <Pill t={t} tone="accent">● live · {opponentReady ? 'opponent ready' : 'waiting for player 2'}</Pill>
+          <Pill t={t} tone="accent">{L.liveDot} {opponentReady ? L.oppReady : L.waitingP2}</Pill>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: '14px 0 6px', letterSpacing: '-0.02em' }}>
-            Share this code
+            {L.shareCode}
           </h1>
           <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>
-            They'll find you on Play → Join with code
+            {L.shareCodeSub}
           </p>
         </div>
 
@@ -1593,33 +1872,33 @@ function ScreenLobby({ t, dark, code, opponentName, category, difficulty, onBack
         <div style={{
           display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 22,
         }}>
-          <GhostBtn t={t} onClick={copy}>{copied ? '✓ Copied' : '⧉ Copy'}</GhostBtn>
-          <GhostBtn t={t} onClick={copy}>↑ Share link</GhostBtn>
+          <GhostBtn t={t} onClick={copy}>{copied ? L.copied : L.copy}</GhostBtn>
+          <GhostBtn t={t} onClick={copy}>{L.shareLink}</GhostBtn>
         </div>
 
         <Card t={t} style={{ padding: 0, overflow: 'hidden' }}>
-          <PlayerRow t={t} name="Layla (you)" sub="ready" rank="#142" you />
+          <PlayerRow t={t} name={`${L.userName}${L.youSuffix}`} sub={L.ready} rank="#142" you />
           <div style={{ height: 1, background: t.border }} />
           {opponentReady
-            ? <PlayerRow t={t} name={opponentName || 'Omar'} sub="ready" rank="#218" />
-            : <PlayerRow t={t} name="Waiting…" sub="player 2" pending />
+            ? <PlayerRow t={t} name={opponentName || (lang === 'ar' ? 'عمر' : 'Omar')} sub={L.ready} rank="#218" />
+            : <PlayerRow t={t} name={L.waitingDots} sub={L.player2} pending />
           }
         </Card>
 
         <div style={{ marginTop: 16 }}>
-          <SectionTitle t={t}>Match</SectionTitle>
+          <SectionTitle t={t}>{L.match}</SectionTitle>
         </div>
         <Card t={t} style={{ marginTop: 10 }}>
-          <Setting t={t} label="Mode" value="Head-to-head" />
-          <Setting t={t} label="Category" value={cat ? cat.label : 'Random'} />
-          <Setting t={t} label="Difficulty" value={`${diff.label} · ${diff.mult}× score`} />
-          <Setting t={t} label="Timer" value={`${TIMER_SECONDS}s per question`} />
-          <Setting t={t} label="Questions" value={QUESTIONS_PER_MATCH} last />
+          <Setting t={t} label={L.mode} value={L.modeH2H} />
+          <Setting t={t} label={L.category} value={cat ? catLabel(cat, lang) : L.random} />
+          <Setting t={t} label={L.difficulty} value={`${diffLabel(diff, lang)} · ${diff.mult}${L.scoreMult}`} />
+          <Setting t={t} label={L.timer} value={`${TIMER_SECONDS}${L.perQuestion}`} />
+          <Setting t={t} label={L.questions} value={QUESTIONS_PER_MATCH} last />
         </Card>
 
         <div style={{ marginTop: 22 }}>
           <PrimaryBtn t={t} onClick={onStart} disabled={!opponentReady} icon={<span>▶</span>}>
-            {opponentReady ? 'Start when ready' : 'Waiting for opponent…'}
+            {opponentReady ? L.startReady : L.waitingOpp}
           </PrimaryBtn>
         </div>
       </div>
@@ -1629,6 +1908,7 @@ function ScreenLobby({ t, dark, code, opponentName, category, difficulty, onBack
 
 // ───────────────────────── 7. QUESTION (Team) ─────────────────────────
 function ScoreSide({ t, name, score, you, right }) {
+  const { L } = useLang();
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
@@ -1641,7 +1921,7 @@ function ScoreSide({ t, name, score, you, right }) {
         color: '#fff', fontWeight: 700, fontSize: 12,
       }}>{name[0]}</div>
       <div style={{ textAlign: right ? 'right' : 'left' }}>
-        <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{name}{you && ' (you)'}</div>
+        <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{name}{you && L.youSuffix}</div>
         <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{score}</div>
       </div>
     </div>
@@ -1649,6 +1929,7 @@ function ScoreSide({ t, name, score, you, right }) {
 }
 
 function TimerRing({ t, sec, total }) {
+  const { L } = useLang();
   const pct = sec / total;
   const r = 48;
   const c = 2 * Math.PI * r;
@@ -1670,7 +1951,7 @@ function TimerRing({ t, sec, total }) {
         <div style={{ fontSize: 32, fontWeight: 700, fontFamily: MONO, color, lineHeight: 1 }}>
           {sec.toString().padStart(2, '0')}
         </div>
-        <div style={{ fontSize: 10, color: t.textDim, fontFamily: MONO, marginTop: 2 }}>seconds</div>
+        <div style={{ fontSize: 10, color: t.textDim, fontFamily: MONO, marginTop: 2 }}>{L.secondsLbl}</div>
       </div>
     </div>
   );
@@ -1729,8 +2010,11 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
                               yourScore, oppScore, oppName,
                               selected, revealed, correctIdx, oppPickIdx, secLeft,
                               onBack, onPick }) {
+  const { L, lang } = useLang();
   const cat = CATEGORIES.find(c => c.id === category);
-  const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
+  const dObj = DIFFICULTIES.find(d => d.id === difficulty);
+  const dLbl = diffLabel(dObj, lang);
+  const catLbl = cat ? catLabel(cat, lang) : L.mix;
 
   if (q.type === 'tf') {
     const isTrueCorrect = q.a === 0;
@@ -1741,7 +2025,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
         <div style={{ padding: '0 20px', position: 'relative' }}>
           <BackHeader t={t} onBack={onBack} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+            <Pill t={t}>{L.qOf} {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
             <TimerBar t={t} sec={secLeft} total={TIMER_SECONDS} />
           </div>
 
@@ -1753,19 +2037,19 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
 
           <div style={{ marginTop: -50 }}>
             <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em' }}>
-              // {(cat?.label || 'MIX').toUpperCase()} · TRUE OR FALSE
+              // {catLbl} · {L.tfTag}
             </div>
             <h2 style={{
               fontSize: 26, fontWeight: 700, lineHeight: 1.2,
               margin: '10px 0 32px', letterSpacing: '-0.02em',
             }}>
-              {q.q}
+              {qText(q, lang)}
             </h2>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <BigChoice
-              t={t} label="TRUE" sub="A" tone="success"
+              t={t} label={L.truee} sub="A" tone="success"
               selected={selected === 0}
               correct={revealed && isTrueCorrect}
               wrong={revealed && !isTrueCorrect && selected === 0}
@@ -1773,7 +2057,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
               onClick={() => onPick(0)}
             />
             <BigChoice
-              t={t} label="FALSE" sub="B" tone="danger"
+              t={t} label={L.falsee} sub="B" tone="danger"
               selected={selected === 1}
               correct={revealed && isFalseCorrect}
               wrong={revealed && !isFalseCorrect && selected === 1}
@@ -1788,7 +2072,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
             padding: '12px 16px', borderRadius: 14,
             border: `1px solid ${t.border}`, background: t.surface,
           }}>
-            <span>Layla <b style={{ color: t.text }}>{yourScore}</b></span>
+            <span>{L.userName} <b style={{ color: t.text }}>{yourScore}</b></span>
             <span>•</span>
             <span>{oppName} <b style={{ color: t.text }}>{oppScore}</b></span>
           </div>
@@ -1803,8 +2087,8 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
-          <Pill t={t} tone="accent">⚡ head-to-head</Pill>
+          <Pill t={t}>{L.qOf} {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+          <Pill t={t} tone="accent">{L.h2hTag}</Pill>
         </div>
 
         <div style={{
@@ -1812,7 +2096,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
           marginTop: 14, padding: '12px 16px', borderRadius: 18,
           background: t.surface, border: `1px solid ${t.border}`,
         }}>
-          <ScoreSide t={t} name="Layla" score={yourScore} you />
+          <ScoreSide t={t} name={L.userName} score={yourScore} you />
           <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, opacity: 0.7 }}>vs</div>
           <ScoreSide t={t} name={oppName} score={oppScore} right />
         </div>
@@ -1824,15 +2108,15 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
         <div style={{
           fontFamily: MONO, fontSize: 11, color: t.textDim,
           letterSpacing: '0.1em', textAlign: 'center',
-        }}>// {(cat?.label || 'MIX').toUpperCase()} · {(diffLabel || '').toUpperCase()}</div>
+        }}>// {catLbl} · {dLbl}</div>
         <h2 style={{
           fontSize: 22, fontWeight: 700, lineHeight: 1.25,
           textAlign: 'center', margin: '8px 0 22px',
           letterSpacing: '-0.01em',
-        }}>{q.q}</h2>
+        }}>{qText(q, lang)}</h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {q.opts.map((text, i) => (
+          {qOpts(q, lang).map((text, i) => (
             <Option
               key={i}
               t={t}
@@ -1853,7 +2137,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
             background: t.surface, border: `1px solid ${t.border}`,
             fontSize: 13, color: t.textDim, fontFamily: MONO, textAlign: 'center',
           }}>
-            {oppName} picked <b style={{ color: oppPickIdx === correctIdx ? t.success : t.danger }}>
+            {oppName} {L.pickedB} <b style={{ color: oppPickIdx === correctIdx ? t.success : t.danger }}>
               {String.fromCharCode(65 + oppPickIdx)}
             </b>
           </div>
@@ -1880,18 +2164,33 @@ function TimerBar({ t, sec, total }) {
 
 // ───────────────────────── 8. QUESTION (Solo) ─────────────────────────
 const SOLO_FACTS = {
-  movies:    "Cinema's been around since the late 1800s — over 130 years of stories.",
-  history:   "Recorded human history spans roughly 5,000 years.",
-  landmarks: "The New Seven Wonders of the World were chosen by public vote in 2007.",
-  sports:    "The first modern Olympics were held in Athens in 1896.",
-  music:     "There are 12 unique pitch classes in Western music.",
-  science:   "There are 118 confirmed elements on the periodic table.",
+  en: {
+    movies:    "Cinema's been around since the late 1800s — over 130 years of stories.",
+    history:   "Recorded human history spans roughly 5,000 years.",
+    landmarks: "The New Seven Wonders of the World were chosen by public vote in 2007.",
+    sports:    "The first modern Olympics were held in Athens in 1896.",
+    music:     "There are 12 unique pitch classes in Western music.",
+    science:   "There are 118 confirmed elements on the periodic table.",
+  },
+  ar: {
+    movies:    'السينما موجودة منذ أواخر القرن التاسع عشر — أكثر من 130 سنة من القصص.',
+    history:   'يمتد التاريخ البشري المُدوَّن نحو 5,000 سنة.',
+    landmarks: 'عجائب الدنيا السبع الجديدة اختيرت بتصويت شعبي عام 2007.',
+    sports:    'أُقيمت أول دورة أولمبية حديثة في أثينا عام 1896.',
+    music:     'هناك 12 درجة صوتية فريدة في الموسيقى الغربية.',
+    science:   'يوجد 118 عنصراً مؤكداً في الجدول الدوري.',
+  },
 };
 
 function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
                               selected, revealed, correctIdx, onBack, onPick, onNext }) {
+  const { L, lang } = useLang();
   const cat = CATEGORIES.find(c => c.id === category);
-  const diffLabel = (DIFFICULTIES.find(d => d.id === difficulty) || {}).label;
+  const dObj = DIFFICULTIES.find(d => d.id === difficulty);
+  const dLbl = diffLabel(dObj, lang);
+  const catLbl = cat ? catLabel(cat, lang) : L.mix;
+  const arrow = lang === 'ar' ? '←' : '→';
+  const fact = SOLO_FACTS[lang]?.[category] || SOLO_FACTS.en[category] || '';
 
   if (q.type === 'tf') {
     const isTrueCorrect = q.a === 0;
@@ -1902,8 +2201,8 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
         <div style={{ padding: '0 20px', position: 'relative' }}>
           <BackHeader t={t} onBack={onBack} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
-            <Pill t={t}>🧠 solo · no timer</Pill>
+            <Pill t={t}>{L.qOf} {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+            <Pill t={t}>{L.soloTag}</Pill>
           </div>
 
           <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
@@ -1917,20 +2216,20 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
           </div>
 
           <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em', marginTop: 22 }}>
-            // {(cat?.label || 'MIX').toUpperCase()} · TRUE OR FALSE
+            // {catLbl} · {L.tfTag}
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 22px', letterSpacing: '-0.01em' }}>
-            {q.q}
+            {qText(q, lang)}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <BigChoice t={t} label="TRUE" sub="A" tone="success"
+            <BigChoice t={t} label={L.truee} sub="A" tone="success"
               selected={selected === 0}
               correct={revealed && isTrueCorrect}
               wrong={revealed && !isTrueCorrect && selected === 0}
               locked={revealed || selected != null}
               onClick={() => onPick(0)} />
-            <BigChoice t={t} label="FALSE" sub="B" tone="danger"
+            <BigChoice t={t} label={L.falsee} sub="B" tone="danger"
               selected={selected === 1}
               correct={revealed && isFalseCorrect}
               wrong={revealed && !isFalseCorrect && selected === 1}
@@ -1946,15 +2245,15 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
               fontSize: 13, color: t.text,
             }}>
               <div style={{ fontFamily: MONO, fontSize: 11, color: selected === q.a ? t.success : t.danger, fontWeight: 700, marginBottom: 4 }}>
-                {selected === q.a ? '✓ CORRECT · +100 PTS' : '✗ NOT QUITE'}
+                {selected === q.a ? L.correctTag : L.wrongTag}
               </div>
-              {SOLO_FACTS[category] || ''}
+              {fact}
             </div>
           )}
 
           <div style={{ marginTop: 14 }}>
-            <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>→</span>}>
-              {qIdx + 1 === total ? 'See results' : 'Next question'}
+            <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>{arrow}</span>}>
+              {qIdx + 1 === total ? L.seeResults : L.nextQ}
             </PrimaryBtn>
           </div>
         </div>
@@ -1968,8 +2267,8 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Pill t={t}>Q {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
-          <Pill t={t}>🧠 solo · no timer</Pill>
+          <Pill t={t}>{L.qOf} {String(qIdx+1).padStart(2,'0')} / {String(total).padStart(2,'0')}</Pill>
+          <Pill t={t}>{L.soloTag}</Pill>
         </div>
 
         <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
@@ -1983,10 +2282,10 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
         </div>
 
         <div style={{ fontFamily: MONO, fontSize: 11, color: t.textDim, letterSpacing: '0.1em', marginTop: 22 }}>
-          // {(cat?.label || 'MIX').toUpperCase()} · {(diffLabel || '').toUpperCase()}
+          // {catLbl} · {dLbl}
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 14px', letterSpacing: '-0.01em' }}>
-          {q.q}
+          {qText(q, lang)}
         </h2>
 
         <div style={{
@@ -1998,10 +2297,10 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: MONO, fontSize: 11, color: t.textMute,
           letterSpacing: '0.15em', marginBottom: 18,
-        }}>[ {(cat?.emoji || '?')} {(cat?.label || 'mix').toUpperCase()} ]</div>
+        }}>[ {(cat?.emoji || '?')} {catLbl} ]</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {q.opts.map((text, i) => (
+          {qOpts(q, lang).map((text, i) => (
             <Option key={i}
               t={t}
               letter={String.fromCharCode(65 + i)}
@@ -2022,15 +2321,15 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
             fontSize: 13, color: t.text,
           }}>
             <div style={{ fontFamily: MONO, fontSize: 11, color: selected === q.a ? t.success : t.danger, fontWeight: 700, marginBottom: 4 }}>
-              {selected === q.a ? '✓ CORRECT · +100 PTS' : '✗ NOT QUITE'}
+              {selected === q.a ? L.correctTag : L.wrongTag}
             </div>
-            {SOLO_FACTS[category] || ''}
+            {fact}
           </div>
         )}
 
         <div style={{ marginTop: 14 }}>
-          <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>→</span>}>
-            {qIdx + 1 === total ? 'See results' : 'Next question'}
+          <PrimaryBtn t={t} onClick={onNext} disabled={!revealed} icon={<span>{arrow}</span>}>
+            {qIdx + 1 === total ? L.seeResults : L.nextQ}
           </PrimaryBtn>
         </div>
       </div>
@@ -2040,16 +2339,17 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
 
 // ───────────────────────── 9. RESULTS ─────────────────────────
 function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, total, avgTime, streak, onBack, onRematch, onHome }) {
+  const { L, lang } = useLang();
   const won = mode === 'team' ? yourScore > oppScore : (correct >= Math.ceil(total/2));
   const tied = mode === 'team' && yourScore === oppScore;
   const margin = Math.abs(yourScore - oppScore);
   const symbol = mode === 'team' ? (won ? 'W' : tied ? 'T' : 'L') : (correct === total ? '★' : '✓');
   const headline = mode === 'team'
-    ? (won ? 'You won!' : tied ? "It's a tie." : 'Lost — close one.')
-    : (correct === total ? 'Flawless!' : `${correct}/${total} correct`);
+    ? (won ? L.youWon : tied ? L.tie : L.lostClose)
+    : (correct === total ? L.flawless : `${correct}/${total} ${L.correctOf}`);
   const sub = mode === 'team'
-    ? (tied ? 'Even matchup.' : `By ${margin} points. ${won ? 'Brutal.' : 'Rematch?'}`)
-    : `Nice run. +${yourScore} pts.`;
+    ? (tied ? L.evenMatchup : `${L.by} ${margin} ${L.points}. ${won ? L.brutal : L.rematch}`)
+    : `${L.niceRun} +${yourScore} ${L.pts}`;
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
@@ -2060,7 +2360,7 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
         <div style={{
           fontFamily: MONO, fontSize: 11, color: t.textDim,
           letterSpacing: '0.15em', marginTop: 8,
-        }}>// MATCH COMPLETE</div>
+        }}>{L.matchComplete}</div>
 
         <div style={{
           margin: '14px 0 6px',
@@ -2088,9 +2388,9 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
                   color: '#fff', fontWeight: 700,
                 }}>L</div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>Layla (you)</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{L.userName}{L.youSuffix}</div>
                   <Pill t={t} tone={won ? 'success' : tied ? 'default' : 'danger'}>
-                    {won ? `+${margin} vs avg` : tied ? '— even' : `-${margin} vs avg`}
+                    {won ? `+${margin}` : tied ? '— —' : `-${margin}`}
                   </Pill>
                 </div>
               </div>
@@ -2107,7 +2407,7 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
                 }}>{oppName[0]}</div>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{oppName}</div>
-                  <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{won ? 'nice try' : 'gg'}</div>
+                  <div style={{ fontSize: 12, color: t.textDim, fontFamily: MONO }}>{won ? L.niceTry : L.gg}</div>
                 </div>
               </div>
               <div style={{ fontSize: 28, fontWeight: 700, fontFamily: MONO, color: won ? t.textDim : t.text }}>{oppScore}</div>
@@ -2118,14 +2418,14 @@ function ScreenResults({ t, dark, mode, yourScore, oppScore, oppName, correct, t
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 16,
         }}>
-          <Stat t={t} label="correct" value={`${correct}/${total}`} />
-          <Stat t={t} label="avg time" value={mode === 'team' ? `${avgTime.toFixed(1)}s` : '—'} />
-          <Stat t={t} label="streak" value={streak} />
+          <Stat t={t} label={L.correctLbl} value={`${correct}/${total}`} />
+          <Stat t={t} label={L.avgTimeLbl} value={mode === 'team' ? `${avgTime.toFixed(1)}s` : '—'} />
+          <Stat t={t} label={L.streakLbl} value={streak} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 22 }}>
-          <PrimaryBtn t={t} onClick={onRematch} icon={<span>↻</span>}>Rematch</PrimaryBtn>
-          <GhostBtn t={t} full onClick={onHome}>Back to home</GhostBtn>
+          <PrimaryBtn t={t} onClick={onRematch} icon={<span>↻</span>}>{L.rematchBtn}</PrimaryBtn>
+          <GhostBtn t={t} full onClick={onHome}>{L.backToHome}</GhostBtn>
         </div>
       </div>
     </Bg>
@@ -2211,6 +2511,7 @@ function RankRow({ t, rank, name, score, you }) {
 }
 
 function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
+  const { L } = useLang();
   const [tab, setTab] = useState('friends');
   const top = [
     { rank: 2, name: 'Yousef',   score: 9420,  avatar: '#FF6B6B' },
@@ -2218,11 +2519,11 @@ function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
     { rank: 3, name: 'Mohammed', score: 8980,  avatar: '#4ADE80' },
   ];
   const list = [
-    { rank: 4,  name: 'Noor',         score: 8450 },
-    { rank: 5,  name: 'Ahmed',        score: 8120 },
-    { rank: 6,  name: 'Fatima',       score: 7890 },
-    { rank: 7,  name: 'Khaled',       score: 7610 },
-    { rank: 142, name: 'Layla (you)', score: store.bestScore, you: true },
+    { rank: 4,  name: 'Noor',                            score: 8450 },
+    { rank: 5,  name: 'Ahmed',                           score: 8120 },
+    { rank: 6,  name: 'Fatima',                          score: 7890 },
+    { rank: 7,  name: 'Khaled',                          score: 7610 },
+    { rank: 142, name: `${L.userName}${L.youSuffix}`,    score: store.bestScore, you: true },
   ];
   return (
     <Bg t={t} padTop={56}>
@@ -2230,21 +2531,21 @@ function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Leaderboard</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{L.leaderboard}</h1>
           <div style={{
             padding: '6px 4px', borderRadius: 100,
             background: t.surface, border: `1px solid ${t.border}`,
             display: 'flex', gap: 2,
           }}>
-            <Tab t={t} active={tab==='friends'} onClick={() => setTab('friends')}>Friends</Tab>
-            <Tab t={t} active={tab==='global'} onClick={() => setTab('global')}>Global</Tab>
+            <Tab t={t} active={tab==='friends'} onClick={() => setTab('friends')}>{L.friends}</Tab>
+            <Tab t={t} active={tab==='global'} onClick={() => setTab('global')}>{L.global}</Tab>
           </div>
         </div>
 
         <div style={{
           fontFamily: MONO, fontSize: 11, color: t.textDim,
           letterSpacing: '0.1em', marginTop: 6,
-        }}>// THIS WEEK · RESETS IN 3D 14H</div>
+        }}>{L.thisWeek}</div>
 
         <div style={{
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
@@ -2270,6 +2571,7 @@ function ScreenLeaderboard({ t, dark, store, onBack, onNav }) {
 
 // ───────────────────────── 11. PROFILE ─────────────────────────
 function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
+  const { L, lang } = useLang();
   const accuracy = store.totalAnswered ? Math.round(store.correctTotal / store.totalAnswered * 100) : 0;
   return (
     <Bg t={t} padTop={56}>
@@ -2277,7 +2579,7 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>Profile</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}>{L.profile}</h1>
           <div onClick={onToggleTheme} title={dark ? 'Switch to light' : 'Switch to dark'} style={{
             width: 38, height: 38, borderRadius: 100,
             background: t.surface, border: `1px solid ${t.border}`,
@@ -2293,26 +2595,26 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontWeight: 700, fontSize: 38,
             boxShadow: t.accentGlow,
-          }}>L</div>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>Layla A.</div>
+          }}>{L.userInitial}</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{L.userFull}</div>
           <div style={{ fontFamily: MONO, fontSize: 12, color: t.textDim, marginTop: 2 }}>
-            @layla · joined apr 2026
+            {L.joinedApr}
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 10 }}>
-            <Pill t={t} tone="accent">RANK #142</Pill>
-            <Pill t={t} tone="warn">🔥 {store.streak} STREAK</Pill>
+            <Pill t={t} tone="accent">{L.rankPill}</Pill>
+            <Pill t={t} tone="warn">🔥 {store.streak} {L.streakPill}</Pill>
           </div>
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 16,
           }}>
-            <Stat t={t} label="wins" value={store.wins} />
-            <Stat t={t} label="played" value={store.played} />
-            <Stat t={t} label="accuracy" value={`${accuracy}%`} />
+            <Stat t={t} label={L.wins} value={store.wins} />
+            <Stat t={t} label={L.playedLbl} value={store.played} />
+            <Stat t={t} label={L.accuracy} value={`${accuracy}%`} />
           </div>
         </div>
 
         <div style={{ marginTop: 22 }}>
-          <SectionTitle t={t}>Category mastery</SectionTitle>
+          <SectionTitle t={t}>{L.catMastery}</SectionTitle>
         </div>
         <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {CATEGORIES.map(c => {
@@ -2326,7 +2628,7 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
                 <div style={{ fontSize: 22 }}>{c.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>{c.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600 }}>{catLabel(c, lang)}</span>
                     <span style={{ fontFamily: MONO, fontSize: 12, color: t.textDim }}>{pct}%</span>
                   </div>
                   <div style={{ height: 4, borderRadius: 100, background: t.border, overflow: 'hidden' }}>
@@ -2343,15 +2645,15 @@ function ScreenProfile({ t, dark, store, onBack, onNav, onToggleTheme }) {
         </div>
 
         <div style={{ marginTop: 20 }}>
-          <SectionTitle t={t} action="all →">Achievements</SectionTitle>
+          <SectionTitle t={t} action={L.allArrow}>{L.achievements}</SectionTitle>
         </div>
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 10,
         }}>
           {[
-            { e: '🏆', l: 'First win',     unlocked: store.wins >= 1 },
-            { e: '🔥', l: '7-day streak',  unlocked: store.streak >= 7 },
-            { e: '⚡', l: 'Speed demon',   unlocked: store.bestScore >= 1000 },
+            { e: '🏆', l: L.achFirstWin, unlocked: store.wins >= 1 },
+            { e: '🔥', l: L.achStreak7,  unlocked: store.streak >= 7 },
+            { e: '⚡', l: L.achSpeed,    unlocked: store.bestScore >= 1000 },
           ].map((a, i) => (
             <div key={i} style={{
               padding: 14, borderRadius: 16, textAlign: 'center',
@@ -2407,24 +2709,25 @@ function Toggle({ t, on, onChange }) {
   );
 }
 
-function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggleNotifications, onLogout, onDeleteAccount }) {
+function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggleLang, onToggleNotifications, onLogout, onDeleteAccount }) {
+  const { L, lang } = useLang();
   const [confirmDel, setConfirmDel] = useState(false);
   return (
     <Bg t={t} padTop={56}>
       <Orbs dark={dark} />
       <div style={{ padding: '0 20px', position: 'relative' }}>
         <BackHeader t={t} onBack={onBack} />
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.02em' }}>Settings</h1>
-        <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>Tweak your experience.</p>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 4px', letterSpacing: '-0.02em' }}>{L.settings}</h1>
+        <p style={{ fontSize: 14, color: t.textDim, margin: 0 }}>{L.settingsSub}</p>
 
         {/* Theme */}
         <div style={{ marginTop: 22 }}>
-          <SectionTitle t={t}>Appearance</SectionTitle>
+          <SectionTitle t={t}>{L.appearance}</SectionTitle>
         </div>
         <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
           <SettingsRow t={t}
-            label="Theme"
-            sub={dark ? 'Dark mode' : 'Light mode'}
+            label={L.themeLbl}
+            sub={dark ? L.darkMode : L.lightMode}
             last
             right={
               <div style={{
@@ -2432,8 +2735,8 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
                 background: t.surfaceStrong, border: `1px solid ${t.border}`,
               }}>
                 {[
-                  { id: 'light', icon: '☾', label: 'Light' },
-                  { id: 'dark',  icon: '☼', label: 'Dark' },
+                  { id: 'light', icon: '☾', label: L.light },
+                  { id: 'dark',  icon: '☼', label: L.dark },
                 ].map(opt => {
                   const active = (opt.id === 'dark') === dark;
                   return (
@@ -2455,14 +2758,48 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
           />
         </Card>
 
-        {/* Notifications */}
+        {/* Language */}
         <div style={{ marginTop: 22 }}>
-          <SectionTitle t={t}>Notifications</SectionTitle>
+          <SectionTitle t={t}>{L.language}</SectionTitle>
         </div>
         <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
           <SettingsRow t={t}
-            label="Push notifications"
-            sub={store.notifications ? 'Streak reminders + match invites' : 'Off — you won’t be pinged'}
+            label={L.language}
+            sub={L.langSub}
+            last
+            right={
+              <div style={{
+                display: 'flex', padding: 3, borderRadius: 100,
+                background: t.surfaceStrong, border: `1px solid ${t.border}`,
+              }}>
+                {[
+                  { id: 'en', label: 'EN' },
+                  { id: 'ar', label: 'AR' },
+                ].map(opt => {
+                  const active = lang === opt.id;
+                  return (
+                    <div key={opt.id} onClick={() => { if (!active) onToggleLang(); }} style={{
+                      padding: '6px 14px', borderRadius: 100,
+                      background: active ? t.accent : 'transparent',
+                      color: active ? '#fff' : t.textDim,
+                      fontSize: 12, fontFamily: MONO, fontWeight: 700,
+                      letterSpacing: '0.05em', cursor: 'pointer',
+                    }}>{opt.label}</div>
+                  );
+                })}
+              </div>
+            }
+          />
+        </Card>
+
+        {/* Notifications */}
+        <div style={{ marginTop: 22 }}>
+          <SectionTitle t={t}>{L.notifications}</SectionTitle>
+        </div>
+        <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
+          <SettingsRow t={t}
+            label={L.pushNotif}
+            sub={store.notifications ? L.notifOn : L.notifOff}
             last
             right={<Toggle t={t} on={!!store.notifications} onChange={onToggleNotifications} />}
           />
@@ -2470,18 +2807,18 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
 
         {/* Account */}
         <div style={{ marginTop: 22 }}>
-          <SectionTitle t={t}>Account</SectionTitle>
+          <SectionTitle t={t}>{L.account}</SectionTitle>
         </div>
         <Card t={t} style={{ marginTop: 10, padding: 0, overflow: 'hidden' }}>
           <SettingsRow t={t}
-            label="Logout"
-            sub="Sign out of this device"
+            label={L.logout}
+            sub={L.logoutSub}
             onClick={onLogout}
             right={<span style={{ color: t.textDim, fontSize: 18 }}>↪</span>}
           />
           <SettingsRow t={t}
-            label="Delete account"
-            sub="Erase your data and progress"
+            label={L.deleteAcc}
+            sub={L.deleteAccSub}
             danger
             last
             onClick={() => setConfirmDel(true)}
@@ -2493,7 +2830,7 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
           marginTop: 22, fontFamily: MONO, fontSize: 10,
           color: t.textMute, textAlign: 'center', letterSpacing: '0.15em',
         }}>
-          {'</>'} BRACKET v1.0.0 {'</>'}
+          {L.versionLine}
         </div>
       </div>
 
@@ -2509,17 +2846,17 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
             background: dark ? '#0F1B36' : '#fff', padding: 22, maxWidth: 340,
             border: `1px solid ${t.border}`,
           }}>
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Delete account?</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{L.deleteConfirm}</div>
             <div style={{ fontSize: 14, color: t.textDim, marginBottom: 18 }}>
-              This wipes your streak, stats and mastery. Can't be undone.
+              {L.deleteConfirmSub}
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <GhostBtn t={t} full onClick={() => setConfirmDel(false)}>Cancel</GhostBtn>
+              <GhostBtn t={t} full onClick={() => setConfirmDel(false)}>{L.cancel}</GhostBtn>
               <button onClick={() => { setConfirmDel(false); onDeleteAccount(); }} style={{
                 flex: 1, padding: '14px 18px', borderRadius: 16,
                 background: t.danger, color: '#fff', border: 0, cursor: 'pointer',
                 fontFamily: SANS, fontWeight: 600, fontSize: 15,
-              }}>Delete</button>
+              }}>{L.deleteBtn}</button>
             </div>
           </Card>
         </div>
@@ -2567,6 +2904,10 @@ function App() {
   const [store, updateStore] = useStore();
   const dark = store.darkMode;
   const t = dark ? TOKENS.dark : TOKENS.light;
+  const lang = store.lang || 'en';
+  const L = STRINGS[lang] || STRINGS.en;
+  const isRTL = lang === 'ar';
+  const toggleLang = () => updateStore({ lang: lang === 'ar' ? 'en' : 'ar' });
 
   // navigation: which top-level screen + history stack for back button
   const [screen, setScreen] = useState('onboarding'); // onboarding | auth | authEmail | authPhone | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile | settings
@@ -2851,7 +3192,6 @@ function App() {
     />;
   } else if (screen === 'home') {
     body = <ScreenHome t={t} dark={dark} store={store}
-      onBack={ob}
       onPickMode={onPickMode}
       onNav={onNav}
       onToggleTheme={toggleTheme}
@@ -2945,20 +3285,20 @@ function App() {
       onHome={() => navigate('home')}
     />;
   } else if (screen === 'leaderboard') {
-    body = <ScreenLeaderboard t={t} dark={dark} store={store} onBack={ob} onNav={onNav} />;
+    body = <ScreenLeaderboard t={t} dark={dark} store={store} onNav={onNav} />;
   } else if (screen === 'profile') {
-    body = <ScreenProfile t={t} dark={dark} store={store} onBack={ob} onNav={onNav} onToggleTheme={toggleTheme} />;
+    body = <ScreenProfile t={t} dark={dark} store={store} onNav={onNav} onToggleTheme={toggleTheme} />;
   } else if (screen === 'settings') {
     body = <ScreenSettings t={t} dark={dark} store={store}
-      onBack={ob}
       onNav={onNav}
       onToggleTheme={toggleTheme}
+      onToggleLang={toggleLang}
       onToggleNotifications={onToggleNotifications}
       onLogout={onLogout}
       onDeleteAccount={onDeleteAccount}
     />;
   } else {
-    body = <ScreenHome t={t} dark={dark} store={store} onBack={ob} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
+    body = <ScreenHome t={t} dark={dark} store={store} onPickMode={onPickMode} onNav={onNav} onToggleTheme={toggleTheme} />;
   }
 
   // Map current screen → which nav tab is active (null = no nav bar)
@@ -2966,12 +3306,19 @@ function App() {
   const navActive = navMap[screen] || null;
 
   return (
-    <div className="phone" style={{ background: t.bg, color: t.text }}>
-      <div className="screen" key={screen + ':' + qIdx} style={{ height: '100%' }}>
-        {body}
+    <LangCtx.Provider value={{ L, lang, toggleLang }}>
+      <div className="phone" dir={isRTL ? 'rtl' : 'ltr'} style={{
+        background: t.bg, color: t.text,
+        fontFamily: isRTL
+          ? '"Noto Naskh Arabic", "SF Arabic", "Geeza Pro", "Tahoma", sans-serif'
+          : SANS,
+      }}>
+        <div className="screen" key={screen + ':' + qIdx + ':' + lang} style={{ height: '100%' }}>
+          {body}
+        </div>
+        {navActive && <BottomNav t={t} active={navActive} onNav={onNav} />}
       </div>
-      {navActive && <BottomNav t={t} active={navActive} onNav={onNav} />}
-    </div>
+    </LangCtx.Provider>
   );
 }
 
