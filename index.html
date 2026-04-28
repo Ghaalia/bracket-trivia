@@ -61,6 +61,8 @@
     75% { transform: translateX(6px); }
   }
   .shake { animation: shake 220ms ease-in-out; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 900ms linear infinite; }
 </style>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
@@ -135,132 +137,87 @@ const CATEGORIES = [
 const catLabel = (c, lang) => c ? (lang === 'ar' ? c.label_ar : c.label) : '';
 
 // ───────────────────────── Question bank ─────────────────────────
-// type: 'mc' multiple choice | 'tf' true/false. answer = index of correct option (or 0/1 for tf where 0=true,1=false)
-const QUESTIONS = {
-  movies: {
-    easy: [
-      { type: 'mc', q: 'Which animated film features a snowman named Olaf?', q_ar: 'في أي فيلم رسوم متحركة يظهر رجل الثلج أولاف؟', opts: ['Frozen', 'Tangled', 'Moana', 'Brave'], opts_ar: ['فروزن', 'تانجلد', 'موانا', 'بريف'], a: 0 },
-      { type: 'tf', q: 'The Lion King (1994) was released by Disney.', q_ar: 'فيلم الأسد الملك (1994) من إنتاج ديزني.', a: 0 },
-      { type: 'mc', q: 'Who plays Iron Man in the Marvel films?', q_ar: 'من يؤدي دور آيرون مان في أفلام مارفل؟', opts: ['Chris Evans', 'Robert Downey Jr.', 'Mark Ruffalo', 'Chris Hemsworth'], opts_ar: ['كريس إيفانز', 'روبرت داوني الابن', 'مارك روفالو', 'كريس هيمسوورث'], a: 1 },
-      { type: 'mc', q: 'What color is the main character in Shrek?', q_ar: 'ما لون الشخصية الرئيسية في فيلم شريك؟', opts: ['Blue', 'Red', 'Green', 'Yellow'], opts_ar: ['أزرق', 'أحمر', 'أخضر', 'أصفر'], a: 2 },
-    ],
-    mid: [
-      { type: 'mc', q: 'Who directed the 2021 sci-fi epic "Dune: Part One"?', q_ar: 'من أخرج فيلم الخيال العلمي "ديون: الجزء الأول" (2021)؟', opts: ['Christopher Nolan', 'Denis Villeneuve', 'Greta Gerwig', 'Bong Joon-ho'], opts_ar: ['كريستوفر نولان', 'دينيس فيلنوف', 'جريتا جيرويغ', 'بونغ جون-هو'], a: 1 },
-      { type: 'mc', q: 'Which film won Best Picture at the 2020 Oscars?', q_ar: 'أي فيلم فاز بجائزة أفضل فيلم في أوسكار 2020؟', opts: ['1917', 'Joker', 'Parasite', 'Once Upon a Time in Hollywood'], opts_ar: ['1917', 'جوكر', 'باراسايت', 'ذات مرة في هوليوود'], a: 2 },
-      { type: 'tf', q: 'The Godfather Part II won Best Picture.', q_ar: 'فيلم العراب الجزء الثاني فاز بجائزة أفضل فيلم.', a: 0 },
-      { type: 'mc', q: 'Who composed the soundtrack for "The Lord of the Rings"?', q_ar: 'من ألف الموسيقى التصويرية لفيلم "سيد الخواتم"؟', opts: ['Hans Zimmer', 'John Williams', 'Howard Shore', 'Danny Elfman'], opts_ar: ['هانز زيمر', 'جون ويليامز', 'هاوارد شور', 'داني إلفمان'], a: 2 },
-    ],
-    hard: [
-      { type: 'mc', q: 'Which year was "Citizen Kane" released?', q_ar: 'في أي عام صدر فيلم "المواطن كين"؟', opts: ['1939', '1941', '1945', '1950'], opts_ar: ['1939', '1941', '1945', '1950'], a: 1 },
-      { type: 'mc', q: 'Who directed "In the Mood for Love" (2000)?', q_ar: 'من أخرج فيلم "في مزاج للحب" (2000)؟', opts: ['Wong Kar-wai', 'Park Chan-wook', 'Ang Lee', 'Hou Hsiao-hsien'], opts_ar: ['ونغ كار-واي', 'بارك تشان-ووك', 'آنغ لي', 'هو هسياو-هسين'], a: 0 },
-      { type: 'tf', q: 'Stanley Kubrick directed "A Clockwork Orange" and "2001: A Space Odyssey".', q_ar: 'ستانلي كوبريك أخرج فيلمي "البرتقالة الآلية" و"2001: ملحمة الفضاء".', a: 0 },
-      { type: 'mc', q: 'What is the highest-grossing film not in English?', q_ar: 'ما هو الفيلم الأعلى دخلاً غير الناطق بالإنجليزية؟', opts: ['Parasite', 'The Wandering Earth II', 'Ne Zha 2', 'Hero'], opts_ar: ['باراسايت', 'الأرض التائهة 2', 'ني تشا 2', 'البطل'], a: 2 },
-    ],
-  },
-  history: {
-    easy: [
-      { type: 'mc', q: 'Who was the first President of the United States?', q_ar: 'من كان أول رئيس للولايات المتحدة الأمريكية؟', opts: ['Thomas Jefferson', 'John Adams', 'George Washington', 'Abraham Lincoln'], opts_ar: ['توماس جيفرسون', 'جون آدامز', 'جورج واشنطن', 'أبراهام لينكولن'], a: 2 },
-      { type: 'tf', q: 'The Berlin Wall fell in 1989.', q_ar: 'سقط جدار برلين عام 1989.', a: 0 },
-      { type: 'mc', q: 'In which country did the ancient Olympic Games begin?', q_ar: 'في أي بلد بدأت الألعاب الأولمبية القديمة؟', opts: ['Italy', 'Greece', 'Egypt', 'Turkey'], opts_ar: ['إيطاليا', 'اليونان', 'مصر', 'تركيا'], a: 1 },
-      { type: 'mc', q: 'Which empire built the Colosseum?', q_ar: 'أي إمبراطورية بنت الكولوسيوم؟', opts: ['Greek', 'Ottoman', 'Roman', 'Persian'], opts_ar: ['اليونانية', 'العثمانية', 'الرومانية', 'الفارسية'], a: 2 },
-    ],
-    mid: [
-      { type: 'mc', q: 'In what year did World War II end?', q_ar: 'في أي عام انتهت الحرب العالمية الثانية؟', opts: ['1942', '1944', '1945', '1947'], opts_ar: ['1942', '1944', '1945', '1947'], a: 2 },
-      { type: 'tf', q: 'The Magna Carta was signed in 1215.', q_ar: 'وُقعت الماغنا كارتا عام 1215.', a: 0 },
-      { type: 'mc', q: 'Who was the first woman to win a Nobel Prize?', q_ar: 'من هي أول امرأة فازت بجائزة نوبل؟', opts: ['Marie Curie', 'Rosalind Franklin', 'Ada Lovelace', 'Dorothy Hodgkin'], opts_ar: ['ماري كوري', 'روزاليند فرانكلين', 'آدا لوفلايس', 'دوروثي هودجكين'], a: 0 },
-      { type: 'mc', q: 'The French Revolution began in which year?', q_ar: 'في أي عام بدأت الثورة الفرنسية؟', opts: ['1776', '1789', '1804', '1815'], opts_ar: ['1776', '1789', '1804', '1815'], a: 1 },
-    ],
-    hard: [
-      { type: 'mc', q: 'Which Roman emperor built a wall across northern Britain?', q_ar: 'أي إمبراطور روماني بنى جداراً عبر شمال بريطانيا؟', opts: ['Trajan', 'Hadrian', 'Augustus', 'Nero'], opts_ar: ['تراجان', 'هادريان', 'أغسطس', 'نيرون'], a: 1 },
-      { type: 'tf', q: 'The Treaty of Westphalia was signed in 1648.', q_ar: 'وُقعت معاهدة وستفاليا عام 1648.', a: 0 },
-      { type: 'mc', q: 'Who founded the Mongol Empire?', q_ar: 'من أسس إمبراطورية المغول؟', opts: ['Kublai Khan', 'Tamerlane', 'Genghis Khan', 'Ögedei Khan'], opts_ar: ['قوبلاي خان', 'تيمورلنك', 'جنكيز خان', 'أوغطاي خان'], a: 2 },
-      { type: 'mc', q: 'The Battle of Hastings took place in:', q_ar: 'وقعت معركة هاستينغز في:', opts: ['1066', '1099', '1215', '1314'], opts_ar: ['1066', '1099', '1215', '1314'], a: 0 },
-    ],
-  },
-  landmarks: {
-    easy: [
-      { type: 'mc', q: 'In which city is the Eiffel Tower?', q_ar: 'في أي مدينة يقع برج إيفل؟', opts: ['London', 'Rome', 'Paris', 'Madrid'], opts_ar: ['لندن', 'روما', 'باريس', 'مدريد'], a: 2 },
-      { type: 'tf', q: 'The Statue of Liberty was a gift from France to the United States.', q_ar: 'تمثال الحرية كان هدية من فرنسا إلى الولايات المتحدة.', a: 0 },
-      { type: 'mc', q: 'This iconic 30-meter statue stands above Rio de Janeiro. What is it?', q_ar: 'هذا التمثال الشهير ارتفاعه 30 متراً ويطل على ريو دي جانيرو. ما اسمه؟', opts: ['Eiffel Tower', 'Statue of Liberty', 'Christ the Redeemer', 'Big Ben'], opts_ar: ['برج إيفل', 'تمثال الحرية', 'تمثال المسيح الفادي', 'بيغ بن'], a: 2 },
-      { type: 'mc', q: 'Where is the Great Pyramid of Giza?', q_ar: 'أين يقع هرم الجيزة الأكبر؟', opts: ['Mexico', 'Egypt', 'Peru', 'Sudan'], opts_ar: ['المكسيك', 'مصر', 'بيرو', 'السودان'], a: 1 },
-    ],
-    mid: [
-      { type: 'mc', q: 'The Taj Mahal is located in which country?', q_ar: 'في أي دولة يقع تاج محل؟', opts: ['Pakistan', 'India', 'Bangladesh', 'Nepal'], opts_ar: ['باكستان', 'الهند', 'بنغلاديش', 'نيبال'], a: 1 },
-      { type: 'tf', q: 'Machu Picchu is in Peru.', q_ar: 'تقع ماتشو بيتشو في بيرو.', a: 0 },
-      { type: 'mc', q: 'Which city is home to the Burj Khalifa?', q_ar: 'في أي مدينة يقع برج خليفة؟', opts: ['Doha', 'Riyadh', 'Dubai', 'Abu Dhabi'], opts_ar: ['الدوحة', 'الرياض', 'دبي', 'أبوظبي'], a: 2 },
-      { type: 'mc', q: 'The Acropolis stands above which city?', q_ar: 'فوق أي مدينة تقع الأكروبوليس؟', opts: ['Rome', 'Athens', 'Istanbul', 'Cairo'], opts_ar: ['روما', 'أثينا', 'إسطنبول', 'القاهرة'], a: 1 },
-    ],
-    hard: [
-      { type: 'mc', q: 'Petra is an archaeological city in:', q_ar: 'البتراء مدينة أثرية تقع في:', opts: ['Israel', 'Jordan', 'Lebanon', 'Syria'], opts_ar: ['إسرائيل', 'الأردن', 'لبنان', 'سوريا'], a: 1 },
-      { type: 'tf', q: 'The Great Wall of China is visible from space with the naked eye.', q_ar: 'سور الصين العظيم يُرى من الفضاء بالعين المجردة.', a: 1 },
-      { type: 'mc', q: 'Which landmark sits at 2,430 m above sea level in Peru?', q_ar: 'أي معلم يقع على ارتفاع 2,430 م فوق سطح البحر في بيرو؟', opts: ['Cusco', 'Machu Picchu', 'Nazca', 'Sacsayhuamán'], opts_ar: ['كوسكو', 'ماتشو بيتشو', 'نازكا', 'ساكسايواماًن'], a: 1 },
-      { type: 'mc', q: 'Angkor Wat was originally built as a:', q_ar: 'بُني معبد أنغكور وات في الأصل ليكون:', opts: ['Buddhist temple', 'Hindu temple', 'Royal palace', 'Fortress'], opts_ar: ['معبداً بوذياً', 'معبداً هندوسياً', 'قصراً ملكياً', 'حصناً'], a: 1 },
-    ],
-  },
-  sports: {
-    easy: [
-      { type: 'mc', q: 'How many players are on a soccer team on the field?', q_ar: 'كم عدد لاعبي فريق كرة القدم على أرض الملعب؟', opts: ['9', '10', '11', '12'], opts_ar: ['9', '10', '11', '12'], a: 2 },
-      { type: 'tf', q: 'A marathon is exactly 42.195 km.', q_ar: 'الماراثون مسافته 42.195 كم بالضبط.', a: 0 },
-      { type: 'mc', q: 'Which sport is associated with Wimbledon?', q_ar: 'أي رياضة ترتبط بويمبلدون؟', opts: ['Cricket', 'Tennis', 'Rugby', 'Golf'], opts_ar: ['الكريكيت', 'التنس', 'الرغبي', 'الغولف'], a: 1 },
-      { type: 'mc', q: 'How many points is a touchdown in American football?', q_ar: 'كم نقطة قيمة "تاتشداون" في كرة القدم الأمريكية؟', opts: ['3', '6', '7', '10'], opts_ar: ['3', '6', '7', '10'], a: 1 },
-    ],
-    mid: [
-      { type: 'mc', q: 'Which country won the 2022 FIFA World Cup?', q_ar: 'أي دولة فازت بكأس العالم لكرة القدم 2022؟', opts: ['France', 'Brazil', 'Argentina', 'Germany'], opts_ar: ['فرنسا', 'البرازيل', 'الأرجنتين', 'ألمانيا'], a: 2 },
-      { type: 'tf', q: 'Michael Jordan won six NBA championships with the Bulls.', q_ar: 'فاز مايكل جوردان بست بطولات في الدوري الأمريكي مع شيكاغو بولز.', a: 0 },
-      { type: 'mc', q: 'How many Grand Slam tennis tournaments are there per year?', q_ar: 'كم عدد بطولات الجراند سلام للتنس في السنة؟', opts: ['2', '3', '4', '5'], opts_ar: ['2', '3', '4', '5'], a: 2 },
-      { type: 'mc', q: 'Which country invented the modern Olympics?', q_ar: 'أي دولة ابتكرت الألعاب الأولمبية الحديثة؟', opts: ['Greece', 'France', 'Italy', 'UK'], opts_ar: ['اليونان', 'فرنسا', 'إيطاليا', 'المملكة المتحدة'], a: 1 },
-    ],
-    hard: [
-      { type: 'mc', q: 'Who has the most career Grand Slam singles titles in tennis?', q_ar: 'من يملك أكثر ألقاب الجراند سلام للفردي في تاريخ التنس؟', opts: ['Roger Federer', 'Rafael Nadal', 'Novak Djokovic', 'Pete Sampras'], opts_ar: ['روجر فيدرر', 'رافاييل نادال', 'نوفاك ديوكوفيتش', 'بيت سامبراس'], a: 2 },
-      { type: 'tf', q: 'Cricket\'s longest match (a "Timeless Test") lasted 9 days.', q_ar: 'أطول مباراة كريكيت ("اختبار بلا حدود زمنية") استمرت 9 أيام.', a: 0 },
-      { type: 'mc', q: 'Which country has won the most Tour de France titles?', q_ar: 'أي دولة فازت بأكثر ألقاب طواف فرنسا للدراجات؟', opts: ['Belgium', 'France', 'Spain', 'USA'], opts_ar: ['بلجيكا', 'فرنسا', 'إسبانيا', 'الولايات المتحدة'], a: 1 },
-      { type: 'mc', q: 'In F1, what does DRS stand for?', q_ar: 'في الفورمولا 1، ماذا يعني الاختصار DRS؟', opts: ['Drag Reduction System', 'Drive Recovery System', 'Direct Response Steering', 'Dynamic Race Setup'], opts_ar: ['نظام تقليل السحب', 'نظام استعادة القيادة', 'توجيه الاستجابة المباشرة', 'إعدادات السباق الديناميكية'], a: 0 },
-    ],
-  },
-  music: {
-    easy: [
-      { type: 'mc', q: 'Which band performed "Bohemian Rhapsody"?', q_ar: 'أي فرقة أدت أغنية "بوهيميان رابسودي"؟', opts: ['The Beatles', 'Queen', 'Pink Floyd', 'Led Zeppelin'], opts_ar: ['البيتلز', 'كوين', 'بينك فلويد', 'ليد زيبلين'], a: 1 },
-      { type: 'tf', q: 'Beyoncé was a member of Destiny\'s Child.', q_ar: 'كانت بيونسيه عضواً في فرقة Destiny\'s Child.', a: 0 },
-      { type: 'mc', q: 'How many strings does a standard guitar have?', q_ar: 'كم عدد أوتار الجيتار العادي؟', opts: ['4', '5', '6', '7'], opts_ar: ['4', '5', '6', '7'], a: 2 },
-      { type: 'mc', q: 'Who is known as the "King of Pop"?', q_ar: 'من يُعرف بـ"ملك البوب"؟', opts: ['Elvis Presley', 'Prince', 'Michael Jackson', 'Freddie Mercury'], opts_ar: ['إلفيس بريسلي', 'برنس', 'مايكل جاكسون', 'فريدي ميركوري'], a: 2 },
-    ],
-    mid: [
-      { type: 'mc', q: 'Which Beatles album features "Come Together"?', q_ar: 'أي ألبوم للبيتلز يحتوي على أغنية "كم توغذر"؟', opts: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], opts_ar: ['Let It Be', 'Abbey Road', 'Revolver', 'Help!'], a: 1 },
-      { type: 'tf', q: 'Mozart died before he turned 40.', q_ar: 'توفي موزارت قبل بلوغه الأربعين.', a: 0 },
-      { type: 'mc', q: 'Who created the Broadway musical "Hamilton"?', q_ar: 'من أبدع مسرحية برودواي الموسيقية "هاميلتون"؟', opts: ['Stephen Sondheim', 'Lin-Manuel Miranda', 'Andrew Lloyd Webber', 'Jonathan Larson'], opts_ar: ['ستيفن سوندهايم', 'لين-مانويل ميراندا', 'أندرو لويد ويبر', 'جوناثان لارسون'], a: 1 },
-      { type: 'mc', q: 'What instrument did Miles Davis primarily play?', q_ar: 'ما الآلة التي عزف عليها مايلز ديفيس بشكل أساسي؟', opts: ['Saxophone', 'Trumpet', 'Piano', 'Drums'], opts_ar: ['الساكسفون', 'البوق', 'البيانو', 'الطبول'], a: 1 },
-    ],
-    hard: [
-      { type: 'mc', q: 'Which composer wrote "The Four Seasons"?', q_ar: 'أي مؤلف كتب مقطوعة "الفصول الأربعة"؟', opts: ['Bach', 'Vivaldi', 'Handel', 'Pachelbel'], opts_ar: ['باخ', 'فيفالدي', 'هاندل', 'باخيلبيل'], a: 1 },
-      { type: 'tf', q: 'The album "Thriller" by Michael Jackson is the best-selling album of all time.', q_ar: 'ألبوم "ثريلر" لمايكل جاكسون هو الأكثر مبيعاً في التاريخ.', a: 0 },
-      { type: 'mc', q: 'In music theory, how many notes are in a chromatic scale?', q_ar: 'في نظرية الموسيقى، كم نغمة في السلم اللوني؟', opts: ['7', '8', '12', '13'], opts_ar: ['7', '8', '12', '13'], a: 2 },
-      { type: 'mc', q: 'Which producer is associated with Wu-Tang Clan?', q_ar: 'أي منتج يرتبط بفرقة وو-تانغ كلان؟', opts: ['Dr. Dre', 'RZA', 'Pharrell', 'Timbaland'], opts_ar: ['دكتور دري', 'آر زي إيه', 'فاريل', 'تيمبالاند'], a: 1 },
-    ],
-  },
-  science: {
-    easy: [
-      { type: 'mc', q: 'What is the chemical symbol for water?', q_ar: 'ما الرمز الكيميائي للماء؟', opts: ['HO', 'H2O', 'O2', 'OH'], opts_ar: ['HO', 'H2O', 'O2', 'OH'], a: 1 },
-      { type: 'tf', q: 'The sun is a star.', q_ar: 'الشمس نجم.', a: 0 },
-      { type: 'mc', q: 'How many planets are in our solar system?', q_ar: 'كم عدد الكواكب في مجموعتنا الشمسية؟', opts: ['7', '8', '9', '10'], opts_ar: ['7', '8', '9', '10'], a: 1 },
-      { type: 'mc', q: 'What is the largest organ in the human body?', q_ar: 'ما هو أكبر عضو في جسم الإنسان؟', opts: ['Liver', 'Brain', 'Skin', 'Heart'], opts_ar: ['الكبد', 'الدماغ', 'الجلد', 'القلب'], a: 2 },
-    ],
-    mid: [
-      { type: 'mc', q: 'What gas do plants absorb from the atmosphere?', q_ar: 'أي غاز تمتصه النباتات من الجو؟', opts: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Hydrogen'], opts_ar: ['الأكسجين', 'النيتروجين', 'ثاني أكسيد الكربون', 'الهيدروجين'], a: 2 },
-      { type: 'tf', q: 'Light travels faster than sound.', q_ar: 'الضوء أسرع من الصوت.', a: 0 },
-      { type: 'mc', q: 'Which element has the atomic number 1?', q_ar: 'أي عنصر عدده الذري 1؟', opts: ['Helium', 'Hydrogen', 'Oxygen', 'Carbon'], opts_ar: ['الهيليوم', 'الهيدروجين', 'الأكسجين', 'الكربون'], a: 1 },
-      { type: 'mc', q: 'What does DNA stand for?', q_ar: 'ماذا يعني الاختصار DNA؟', opts: ['Deoxyribonucleic acid', 'Dinitric acid', 'Diribonucleic acid', 'Deoxynitric acid'], opts_ar: ['الحمض النووي الريبي منقوص الأكسجين', 'حمض ثنائي النيتريك', 'حمض ثنائي الريبونوكليك', 'حمض ديوكسي نيتريك'], a: 0 },
-    ],
-    hard: [
-      { type: 'mc', q: 'What is the speed of light in a vacuum (approx)?', q_ar: 'ما سرعة الضوء في الفراغ (تقريبياً)؟', opts: ['300,000 km/s', '150,000 km/s', '1,080,000 km/h', '30,000 km/s'], opts_ar: ['300,000 كم/ث', '150,000 كم/ث', '1,080,000 كم/س', '30,000 كم/ث'], a: 0 },
-      { type: 'tf', q: 'Mercury is the closest planet to the Sun.', q_ar: 'عطارد هو أقرب كوكب إلى الشمس.', a: 0 },
-      { type: 'mc', q: 'Who proposed the theory of general relativity?', q_ar: 'من اقترح نظرية النسبية العامة؟', opts: ['Isaac Newton', 'Niels Bohr', 'Albert Einstein', 'Max Planck'], opts_ar: ['إسحاق نيوتن', 'نيلز بور', 'ألبرت أينشتاين', 'ماكس بلانك'], a: 2 },
-      { type: 'mc', q: 'What particle did the LHC famously confirm in 2012?', q_ar: 'أي جسيم أكده مصادم الهادرونات الكبير عام 2012؟', opts: ['Top quark', 'Higgs boson', 'Neutrino', 'Tau lepton'], opts_ar: ['كوارك القمة', 'بوزون هيغز', 'نيوترينو', 'تاو ليبتون'], a: 1 },
-    ],
-  },
+// Questions are fetched at runtime — English from Open Trivia DB,
+// Arabic from /questions_ar.json served by Vercel.
+// Schema after normalization: { type: 'mc'|'tf', q, opts?, a }
+const OTDB_CAT = {
+  movies:    11, // Entertainment: Film
+  history:   23, // History
+  landmarks: 22, // Geography (closest match)
+  sports:    21, // Sports
+  music:     12, // Entertainment: Music
+  science:   17, // Science & Nature
 };
+const OTDB_DIFF = { easy: 'easy', mid: 'medium', hard: 'hard' };
 
-const qText = (q, lang) => lang === 'ar' && q.q_ar ? q.q_ar : q.q;
-const qOpts = (q, lang) => lang === 'ar' && q.opts_ar ? q.opts_ar : q.opts;
+// Decode HTML entities in OTDB response strings
+function decodeHTML(s) {
+  const t = document.createElement('textarea');
+  t.innerHTML = s;
+  return t.value;
+}
+
+// Shuffle in place
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Fetch English questions from Open Trivia DB and normalize to our schema
+async function fetchEnglish(category, difficulty, count) {
+  const params = new URLSearchParams({
+    amount: String(count),
+    difficulty: OTDB_DIFF[difficulty] || 'medium',
+  });
+  if (category && OTDB_CAT[category]) params.set('category', String(OTDB_CAT[category]));
+  const url = `https://opentdb.com/api.php?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('OTDB fetch failed: ' + res.status);
+  const data = await res.json();
+  if (data.response_code !== 0 || !Array.isArray(data.results)) {
+    throw new Error('OTDB returned no results (code ' + data.response_code + ')');
+  }
+  return data.results.map(r => {
+    if (r.type === 'boolean') {
+      // 0 = True, 1 = False (matches existing schema)
+      return { type: 'tf', q: decodeHTML(r.question), a: r.correct_answer === 'True' ? 0 : 1 };
+    }
+    const correct = decodeHTML(r.correct_answer);
+    const opts = shuffle([correct, ...r.incorrect_answers.map(decodeHTML)]);
+    return { type: 'mc', q: decodeHTML(r.question), opts, a: opts.indexOf(correct) };
+  });
+}
+
+// Fetch Arabic question bank (cached after first load)
+let _arBank = null;
+async function loadArabicBank() {
+  if (_arBank) return _arBank;
+  const res = await fetch('/questions_ar.json');
+  if (!res.ok) throw new Error('Arabic bank fetch failed: ' + res.status);
+  _arBank = await res.json();
+  return _arBank;
+}
+
+async function fetchArabic(category, difficulty, count) {
+  const bank = await loadArabicBank();
+  const pool = [];
+  if (category) {
+    pool.push(...(bank[category]?.[difficulty] || []));
+  } else {
+    Object.keys(bank).forEach(cat => {
+      pool.push(...(bank[cat][difficulty] || []).map(q => ({ ...q, _cat: cat })));
+    });
+  }
+  return shuffle(pool).slice(0, count);
+}
+
+
+// Questions are now fetched in the active language, so just return the field.
+const qText = (q) => q.q;
+const qOpts = (q) => q.opts;
 
 const DIFFICULTIES = [
   { id: 'easy', label: 'Easy', label_ar: 'سهل',    sub: 'Warm up the neurons',     sub_ar: 'لتحمية الذهن',         mult: 1, count: 5,  bars: 1 },
@@ -400,6 +357,11 @@ const STRINGS = {
     cancel: 'Cancel', deleteBtn: 'Delete',
     versionLine: '</> BRACKET v1.0.0 </>',
     // Nav
+    loadingTitle: 'Loading questions…',
+    loadingSub: 'Pulling fresh questions from the wire.',
+    loadFailed: 'Couldn\'t load questions',
+    loadFailedSub: 'Check your connection and try again.',
+    retry: 'Retry', goBack: 'Go back',
     navHome: 'Home', navBoard: 'Board', navMe: 'Me', navSettings: 'Settings',
     // Identity
     userName: 'Layla', userFull: 'Layla A.', userInitial: 'L',
@@ -517,6 +479,11 @@ const STRINGS = {
     deleteConfirmSub: 'سيمحو ذلك سلسلتك وإحصائياتك وإتقانك. لا يمكن التراجع.',
     cancel: 'إلغاء', deleteBtn: 'حذف',
     versionLine: '</> BRACKET الإصدار 1.0.0 </>',
+    loadingTitle: 'جاري تحميل الأسئلة…',
+    loadingSub: 'نجلب أسئلة جديدة من الشبكة.',
+    loadFailed: 'تعذر تحميل الأسئلة',
+    loadFailedSub: 'تحقق من اتصالك وحاول مرة أخرى.',
+    retry: 'إعادة المحاولة', goBack: 'رجوع',
     navHome: 'الرئيسية', navBoard: 'المتصدرون', navMe: 'حسابي', navSettings: 'الإعدادات',
     userName: 'ليلى', userFull: 'ليلى أ.', userInitial: 'ل',
     youSuffix: ' (أنت)',
@@ -2043,7 +2010,7 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
               fontSize: 26, fontWeight: 700, lineHeight: 1.2,
               margin: '10px 0 32px', letterSpacing: '-0.02em',
             }}>
-              {qText(q, lang)}
+              {qText(q)}
             </h2>
           </div>
 
@@ -2113,10 +2080,10 @@ function ScreenQuestionTeam({ t, dark, q, qIdx, total, category, difficulty,
           fontSize: 22, fontWeight: 700, lineHeight: 1.25,
           textAlign: 'center', margin: '8px 0 22px',
           letterSpacing: '-0.01em',
-        }}>{qText(q, lang)}</h2>
+        }}>{qText(q)}</h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {qOpts(q, lang).map((text, i) => (
+          {qOpts(q).map((text, i) => (
             <Option
               key={i}
               t={t}
@@ -2219,7 +2186,7 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
             // {catLbl} · {L.tfTag}
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 22px', letterSpacing: '-0.01em' }}>
-            {qText(q, lang)}
+            {qText(q)}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -2285,7 +2252,7 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
           // {catLbl} · {dLbl}
         </div>
         <h2 style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.25, margin: '8px 0 14px', letterSpacing: '-0.01em' }}>
-          {qText(q, lang)}
+          {qText(q)}
         </h2>
 
         <div style={{
@@ -2300,7 +2267,7 @@ function ScreenQuestionSolo({ t, dark, q, qIdx, total, category, difficulty,
         }}>[ {(cat?.emoji || '?')} {catLbl} ]</div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {qOpts(q, lang).map((text, i) => (
+          {qOpts(q).map((text, i) => (
             <Option key={i}
               t={t}
               letter={String.fromCharCode(65 + i)}
@@ -2865,23 +2832,63 @@ function ScreenSettings({ t, dark, store, onBack, onNav, onToggleTheme, onToggle
   );
 }
 
+// ───────────────────────── Loading screen ─────────────────────────
+function ScreenLoading({ t, dark, error, onRetry, onBack }) {
+  const { L } = useLang();
+  return (
+    <Bg t={t} padTop={56}>
+      <Orbs dark={dark} />
+      <div style={{
+        height: '100%', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: '0 32px',
+        textAlign: 'center', position: 'relative',
+      }}>
+        {error ? (
+          <>
+            <div style={{
+              width: 64, height: 64, borderRadius: 100,
+              background: 'rgba(255,107,107,0.14)',
+              border: `1px solid ${t.danger}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 28, color: t.danger, marginBottom: 18,
+            }}>!</div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>{L.loadFailed}</h2>
+            <p style={{ fontSize: 14, color: t.textDim, margin: '0 0 22px' }}>{L.loadFailedSub}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280 }}>
+              <PrimaryBtn t={t} onClick={onRetry} icon={<span>↻</span>}>{L.retry}</PrimaryBtn>
+              <GhostBtn t={t} full onClick={onBack}>{L.goBack}</GhostBtn>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="spin" style={{
+              width: 56, height: 56, borderRadius: 100,
+              border: `3px solid ${t.border}`,
+              borderTopColor: t.accent,
+              boxShadow: t.accentGlow,
+              marginBottom: 22,
+            }} />
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>{L.loadingTitle}</h2>
+            <p style={{ fontSize: 13, color: t.textDim, margin: 0 }}>{L.loadingSub}</p>
+          </>
+        )}
+      </div>
+    </Bg>
+  );
+}
+
 // ───────────────────────── Match logic ─────────────────────────
-function buildQuestions(category, difficulty, count) {
-  // build a question list from one category+difficulty, or "mix" if category=null
-  const pool = [];
-  if (category) {
-    pool.push(...(QUESTIONS[category]?.[difficulty] || []));
-  } else {
-    Object.keys(QUESTIONS).forEach(cat => {
-      pool.push(...(QUESTIONS[cat][difficulty] || []).map(q => ({ ...q, _cat: cat })));
-    });
-  }
-  // shuffle
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool.slice(0, count);
+// Async question loader: routes to OTDB (English) or Arabic JSON bank.
+// For "random mix" English, fetch one batch per category in parallel.
+async function buildQuestions(category, difficulty, count, lang) {
+  if (lang === 'ar') return fetchArabic(category, difficulty, count);
+  if (category)     return fetchEnglish(category, difficulty, count);
+  const cats = Object.keys(OTDB_CAT);
+  const perCat = Math.max(1, Math.ceil(count / cats.length));
+  const lists = await Promise.all(cats.map(c =>
+    fetchEnglish(c, difficulty, perCat).then(qs => qs.map(q => ({ ...q, _cat: c })))
+  ));
+  return shuffle(lists.flat()).slice(0, count);
 }
 
 function tieredPoints(secLeft) {
@@ -2910,7 +2917,7 @@ function App() {
   const toggleLang = () => updateStore({ lang: lang === 'ar' ? 'en' : 'ar' });
 
   // navigation: which top-level screen + history stack for back button
-  const [screen, setScreen] = useState('onboarding'); // onboarding | auth | authEmail | authPhone | home | invite | categories | difficulty | lobby | question | results | leaderboard | profile | settings
+  const [screen, setScreen] = useState('onboarding'); // onboarding | auth | authEmail | authPhone | home | invite | categories | difficulty | lobby | loading | question | results | leaderboard | profile | settings
   const [history, setHistory] = useState([]);
   const [authMode, setAuthMode] = useState('signup'); // 'signup' | 'login'
 
@@ -3105,15 +3112,25 @@ function App() {
   };
 
   // ─── flow handlers ─────────────────────────────
-  const startMatch = () => {
-    const qs = buildQuestions(category, difficulty, QUESTIONS_PER_MATCH);
-    setQuestions(qs);
+  const [loadError, setLoadError] = useState(null);
+  const startMatch = async () => {
+    setLoadError(null);
+    setQuestions([]);
     setQIdx(0);
     setYourScore(0); setOppScore(0);
     setYourTimes([]); setYourCorrect(0);
     setSelected(null); setRevealed(false); setOppPickIdx(null);
     setSecLeft(TIMER_SECONDS);
-    navigate('question');
+    navigate('loading');
+    try {
+      const qs = await buildQuestions(category, difficulty, QUESTIONS_PER_MATCH, lang);
+      if (!qs || qs.length === 0) throw new Error('empty');
+      setQuestions(qs);
+      navigate('question', { replace: true });
+    } catch (e) {
+      console.error('Failed to load questions:', e);
+      setLoadError(e.message || 'load_failed');
+    }
   };
 
   const onPickMode = (m) => {
@@ -3235,6 +3252,12 @@ function App() {
       difficulty={difficulty}
       onBack={ob}
       onStart={startMatch}
+    />;
+  } else if (screen === 'loading') {
+    body = <ScreenLoading t={t} dark={dark}
+      error={loadError}
+      onRetry={() => startMatch()}
+      onBack={() => { setLoadError(null); back(); }}
     />;
   } else if (screen === 'question' && q) {
     if (mode === 'team') {
